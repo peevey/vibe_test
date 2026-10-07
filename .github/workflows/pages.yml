@@ -9,6 +9,8 @@ on:
     types: [opened, synchronize, reopened, closed, ready_for_review]
 permissions:
   contents: read
+  actions: read
+  checks: read
   pull-requests: write
   pages: write
   id-token: write
@@ -34,10 +36,18 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const selectTestedMain = require('./.github/scripts/tested-main.cjs');
             const build = require('./.github/scripts/build-pages.cjs');
-            const previews = await build({ github, ...context.repo, output: '_site' });
+            const tested = await selectTestedMain({ github, ...context.repo });
+            const previews = await build({ github, ...context.repo, output: '_site', mainRef: tested.sha });
             core.setOutput('previews', JSON.stringify(previews));
-            await core.summary.addHeading('PR previews')
+            const repositoryUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            await core.summary.addHeading('Tested main version')
+              .addLink(`Commit ${tested.sha}`, `${repositoryUrl}/commit/${tested.sha}`)
+              .addRaw('\n\n')
+              .addLink('Successful Browser tests run', `${repositoryUrl}/actions/runs/${tested.runId}`)
+              .addRaw('\n\nThis exact commit is published when deployment succeeds.\n')
+              .addHeading('PR previews')
               .addRaw('Published after this deployment succeeds. Tests are reported separately.\n')
               .addList(previews.map(p => `https://${context.repo.owner}.github.io/${context.repo.repo}/${p.path}`))
               .write();

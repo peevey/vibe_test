@@ -85,7 +85,9 @@ Der Workflow `Pages and PR previews` veröffentlicht die Hauptseite und zusätzl
 https://peevey.github.io/vibe_test/previews/pr-<Nummer>/
 ```
 
-Die Vorschauen werden beim Öffnen, Aktualisieren und Schließen eines Pull Requests neu aufgebaut. Geschlossene Vorschauen verschwinden nach dem nächsten erfolgreichen Deployment. Die Hauptseite bleibt auf dem Stand von `main`. Nach erfolgreicher Veröffentlichung steht der Link direkt im Pull Request als Kommentar von `github-actions[bot]` sowie in der Zusammenfassung des Deployment-Laufs unter Actions. Der Bot aktualisiert seinen vorhandenen Kommentar, statt bei jedem Deployment einen neuen anzulegen. Tests und Vorschau sind separate Ergebnisse; eine erreichbare Vorschau bedeutet nicht, dass die Tests bestanden sind.
+Die Vorschauen werden beim Öffnen, Aktualisieren und Schließen eines Pull Requests neu aufgebaut. Geschlossene Vorschauen verschwinden nach dem nächsten erfolgreichen Deployment. Die Hauptseite verwendet einen erfolgreich getesteten `main`-Commit. Nach erfolgreicher Veröffentlichung steht der Link direkt im Pull Request als Kommentar von `github-actions[bot]` sowie in der Zusammenfassung des Deployment-Laufs unter Actions. Der Bot aktualisiert seinen vorhandenen Kommentar, statt bei jedem Deployment einen neuen anzulegen. Tests und Vorschau sind separate Ergebnisse; eine erreichbare Vorschau bedeutet nicht, dass die Tests bestanden sind.
+
+Bei jedem Auslöser wählt der Builder den neuesten verfügbaren grünen Commit aus der aktuellen `main`-Historie, dessen Push-Testlauf im Workflow `Browser tests` erfolgreich abgeschlossen ist. Die zuletzt gemeldeten `browser-tests`-Checks dieses Commits müssen ebenfalls erfolgreich abgeschlossen sein; ein laufender oder fehlgeschlagener erneuter Testversuch ist keine Freigabe. Der Builder kopiert anschließend genau diese Commit-ID und löst `main` nicht erneut auf. Ein verspäteter alter Testlauf kann damit keinen neueren verfügbaren grünen Stand zurücknehmen. Während neue `main`-Tests noch laufen oder fehlschlagen, können Vorschauen aktualisiert werden und die Hauptseite bleibt bei einem geeigneten früheren grünen Stand. Ohne geeigneten getesteten Stand stoppt das Deployment; die bestehende Pages-Veröffentlichung bleibt bestehen. Unter **Actions → Pages and PR previews** verlinkt die Zusammenfassung den ausgewählten Commit und Testlauf. Dies gilt auch für **Run workflow**.
 
 Aktuell wird ausschließlich die eigenständige `index.html` kopiert. Für Apps mit zusätzlichen Bildern, CSS- oder JavaScript-Dateien muss der Builder erweitert werden. Pull Requests aus Forks erhalten keine Vorschau. Anwendungscode aus PRs wird im Deployment-Runner nicht ausgeführt. Die Vorschau ist öffentlich und teilt die Website-Origin mit der Hauptseite; daher nur vertrauenswürdige Beiträge verwenden und keine sensiblen Daten auf diesen Seiten speichern.
 
@@ -98,7 +100,7 @@ Aktuell wird ausschließlich die eigenständige `index.html` kopiert. Für Apps 
 
 Der initiale Infrastruktur-PR kann noch keine eigene Vorschau erzeugen, weil GitHub den vertrauenswürdigen Workflow erst nach dem Merge von `main` ausführt.
 
-Der Builder wird mit `npm run test:pages` getestet. Dieser Test prüft Hauptseite, Vorschau, Ausschluss von Forks und das Entfernen geschlossener Vorschauen. Die Browsertests laufen weiterhin mit `npm test`.
+Der Builder wird mit `npm run test:pages` getestet. Diese Tests prüfen die Auswahl des getesteten `main`-Commits, Hauptseite, Vorschau, Ausschluss von Forks und das Entfernen geschlossener Vorschauen. Die Browsertests laufen weiterhin mit `npm test`.
 
 ## Refinement, Umsetzungsauftrag und automatische Project-Status
 

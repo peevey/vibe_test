@@ -93,6 +93,11 @@ Setze nur den beauftragten Schritt um und halte Änderungen überschaubar.
 - Nach dem Merge prüfe die Veröffentlichung und bitte den Nutzer um einen
   kurzen Test der betroffenen Funktionen auf der Hauptseite:
   `https://peevey.github.io/vibe_test/`.
+- Pages veröffentlicht genau einen erfolgreich getesteten `main`-Commit.
+  Prüfe Commit und Testlauf in der Deployment-Zusammenfassung. Ein erfolgreiches
+  Vorschau-Deployment kann noch einen früheren grünen Hauptseiten-Stand enthalten,
+  während die Tests für den neuen `main`-Stand laufen. Ein Merge allein bestätigt
+  deshalb noch nicht seine Veröffentlichung.
 - Speichere Tokens ausschließlich als Secrets. Gib keine Secret-Werte aus.
   Beachte bei Workflow-Änderungen die bestehende Trennung: privilegierte
   Workflows laden ihre Skripte von `main` und führen keinen PR-Code aus.
