@@ -21,3 +21,51 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - „Farbe wechseln“ wechselt die Hintergrundfarbe.
 
 Alles steckt in `index.html`. Änderungen werden nach dem Neuladen sichtbar.
+
+## Automatisierte Browsertests
+
+Die App selbst benötigt weiterhin keine Abhängigkeiten. Für Tests sind Node.js 24 und Python 3 erforderlich:
+
+```sh
+npm ci
+npx playwright install --with-deps chromium
+npm test
+```
+
+Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen fünf Abläufe jeweils bei Desktop- und Smartphone-Breite. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
+
+In der Codex-Cloud ist Chromium bereits unter `/usr/bin/chromium` installiert. Dort entfällt der Browserdownload:
+
+```sh
+npm --cache /tmp/vibe-npm-cache ci
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm test
+```
+
+GitHub Actions verwendet den zu Playwright passenden Browser; die Cloud-Prüfung verwendet den vorhandenen Systembrowser.
+
+## Gemeinsamer Entwicklungsablauf
+
+1. Gewünschtes Verhalten und Grenzfälle beschreiben.
+2. Einen Branch vom aktuellen `main` erstellen; bestehende lokale Änderungen zuvor sichern.
+3. Änderung umsetzen, passende Tests ergänzen und `npm test` ausführen.
+4. Darstellung bei Desktop- und Smartphone-Breite visuell prüfen.
+5. Jede unabhängig rücknehmbare Änderung einzeln committen und den Branch pushen.
+6. Pull Request nach `main` öffnen. GitHub Actions führt die Browsertests aus und stellt den Bericht als Artefakt bereit.
+7. Änderungen prüfen, auf grüne Tests warten und mit **Create a merge commit** mergen. Nicht squashen, wenn einzelne Commits erhalten bleiben sollen.
+8. Wenn GitHub Pages auf `main` eingerichtet ist, die Veröffentlichung unter Actions abwarten und die veröffentlichte Seite kurz testen.
+
+### Empfohlene GitHub-Einstellungen
+
+Unter **Settings → Rules → Rulesets** eine Branch-Regel für `main` anlegen und aktivieren:
+
+- Pull Request vor dem Merge verlangen.
+- Erfolgreichen Statuscheck `browser-tests` verlangen. Er ist auswählbar, nachdem der erste Pull-Request-Test gelaufen ist.
+- Force-Pushes und Löschen des Branches blockieren.
+
+Für ein Solo-Projekt sind verpflichtende Fremdfreigaben nicht nötig. Je nach GitHub-Tarif und Repository-Sichtbarkeit können Branch-Regeln eingeschränkt sein.
+
+Unter **Settings → General → Pull Requests** „Allow merge commits“ aktivieren. Optional Squash-Merges deaktivieren, damit einzelne Änderungen erhalten bleiben.
+
+### Eine Änderung zurücknehmen
+
+Einen neuen Branch vom aktuellen `main` erstellen, `git revert <Commit-ID>` ausführen, testen und einen Pull Request öffnen. Nach dem Merge veröffentlicht Pages die Rücknahme automatisch, sofern Pages für `main` aktiviert ist.
