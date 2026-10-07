@@ -47,3 +47,27 @@ test('Builder rejects moving or missing main references before touching existing
     }
   } finally { await fs.rm(output, { recursive: true, force: true }); }
 });
+
+test('HTML copy preserves the embedded star image on main and preview', async () => {
+  const output = await fs.mkdtemp(path.join(os.tmpdir(), 'vibe-stars-'));
+  const html = await fs.readFile(path.join(__dirname, '../index.html'), 'utf8');
+  const github = {
+    rest: { repos: { getContent: async ({ path: file }) => {
+      assert.equal(file, 'index.html');
+      return { data: { type: 'file', encoding: 'base64', content: Buffer.from(html).toString('base64') } };
+    } }, pulls: { list() {} } },
+    paginate: async () => [{ number: 48, head: { sha: 'preview', repo: { full_name: 'peevey/vibe_test' } } }]
+  };
+  try {
+    await build({ github, owner: 'peevey', repo: 'vibe_test', output, mainRef });
+    for (const file of ['index.html', 'previews/pr-48/index.html']) {
+      const published = await fs.readFile(path.join(output, file), 'utf8');
+      assert.equal(published, html);
+      const embedded = published.match(/data:image\/webp;base64,([A-Za-z0-9+/=]+)/);
+      assert.ok(embedded, 'published HTML must contain the image');
+      const image = Buffer.from(embedded[1], 'base64');
+      assert.equal(image.toString('ascii', 0, 4), 'RIFF');
+      assert.equal(image.toString('ascii', 8, 12), 'WEBP');
+    }
+  } finally { await fs.rm(output, { recursive: true, force: true }); }
+});
