@@ -178,6 +178,17 @@ test('Reduzierte Bewegung verhindert auch den automatischen Smiley-Wechsel', asy
 });
 
 test('Smiley reagiert auf Änderungen der Bewegungseinstellung', async ({ page }) => {
+  async function changeMotionPreference(reducedMotion) {
+    // CSS und das JavaScript-change-Ereignis werden nicht zwingend gleichzeitig aktualisiert.
+    await page.evaluate(() => {
+      window.motionPreferenceChanged = new Promise(resolve => {
+        matchMedia('(prefers-reduced-motion: reduce)')
+          .addEventListener('change', () => resolve(true), { once: true });
+      });
+    });
+    await page.emulateMedia({ reducedMotion });
+    await page.evaluate(() => window.motionPreferenceChanged);
+  }
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
@@ -185,11 +196,11 @@ test('Smiley reagiert auf Änderungen der Bewegungseinstellung', async ({ page }
   const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
   await page.clock.runFor(10000);
   await expect(smiley).toHaveText('😄');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await changeMotionPreference('reduce');
   await expect(smiley).toHaveText('🙂');
   await page.clock.runFor(30000);
   await expect(smiley).toHaveText('🙂');
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await changeMotionPreference('no-preference');
   await expect(smiley).toHaveCSS('animation-name', 'spin');
   await page.clock.runFor(10000);
   await expect(smiley).toHaveText('😄');
