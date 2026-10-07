@@ -1,7 +1,7 @@
 name: Project status
 on:
   issues:
-    types: [labeled, unlabeled]
+    types: [labeled]
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, edited]
   workflow_run:
@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   sync:
-    if: github.event_name != 'issues' || startsWith(github.event.label.name, 'workflow:')
+    if: github.event_name != 'issues' || github.event.label.name == 'workflow:ready' || github.event.label.name == 'workflow:in-progress'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

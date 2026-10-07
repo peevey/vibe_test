@@ -76,6 +76,11 @@ Setze nur den beauftragten Schritt um und halte Änderungen überschaubar.
   aktuellen offenen PRs **In review**. Neue Änderungen oder fehlgeschlagene
   Tests setzen ihn zurück auf **In progress**. Entwurfs-PRs werden nicht zur
   Prüfung hochgestuft. Verwende nur einen aktiven PR pro Issue.
+- Labels kennzeichnen Refinement und Umsetzungsauftrag, nicht jeden späteren
+  Board-Status. Nur ihr Hinzufügen löst die labelbasierte Synchronisierung aus.
+  Bei einem passenden offenen PR hat dessen aktueller Teststand Vorrang vor
+  den Labels. Mehrere passende offene PRs für ein Issue führen zu einer
+  Fehlermeldung statt einem beliebigen Statuswechsel.
 - **In review** bedeutet bereit für menschliche Prüfung. **Done** folgt erst
   nach Merge, erfolgreicher Veröffentlichung und bestätigtem Smoke-Test.
   Done wird derzeit manuell gepflegt.
