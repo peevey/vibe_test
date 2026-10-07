@@ -16,8 +16,8 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - Einen Namen eingeben: Die Begrüßung passt sich an.
 - „Neue Willkommensbotschaft“ wählt zufällig eine andere Begrüßung und berücksichtigt deinen Namen.
 - Auf „+1 Klick“ klicken: Der Zähler steigt.
-- Auf „−1 Klick“ klicken: Der Zähler sinkt, auch unter null.
-- „Zurücksetzen“ setzt den Zähler auf null.
+- Auf „−1 Klick“ klicken: Der Zähler sinkt bis null. Bei null ist der Button deaktiviert.
+- „Zurücksetzen“ setzt den Zähler auf null und deaktiviert den Minus-Button.
 - „Farbe wechseln“ wechselt die Hintergrundfarbe.
 
 Alles steckt in `index.html`. Änderungen werden nach dem Neuladen sichtbar.

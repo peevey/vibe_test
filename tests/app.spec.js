@@ -37,14 +37,30 @@ test('Begrüßung berücksichtigt Namen und leere Eingaben', async ({ page }) =>
   await expect(page.locator('#greeting')).toHaveText('Hallo! Schön, dass du da bist.');
 });
 
-test('Zähler zählt in beide Richtungen und lässt sich zurücksetzen', async ({ page }) => {
-  await page.getByRole('button', { name: '−1 Klick', exact: true }).click();
-  await expect(page.locator('#counter')).toHaveText('-1');
-  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
-  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
+test('Zähler bleibt mindestens null und synchronisiert den Minus-Button', async ({ page }) => {
+  const minus = page.getByRole('button', { name: '−1 Klick', exact: true });
+  const plus = page.getByRole('button', { name: '+1 Klick', exact: true });
+  await expect(page.locator('#counter')).toHaveText('0');
+  await expect(minus).toBeDisabled();
+  await plus.click();
   await expect(page.locator('#counter')).toHaveText('1');
+  await expect(minus).toBeEnabled();
+  await plus.click();
+  await expect(page.locator('#counter')).toHaveText('2');
+  await minus.click();
+  await expect(page.locator('#counter')).toHaveText('1');
+  await expect(minus).toBeEnabled();
+  await minus.click();
+  await expect(page.locator('#counter')).toHaveText('0');
+  await expect(minus).toBeDisabled();
+  // Auch ein programmatisch ausgelöstes Ereignis darf die Untergrenze nicht umgehen.
+  await minus.dispatchEvent('click');
+  await expect(page.locator('#counter')).toHaveText('0');
+  await expect(minus).toBeDisabled();
+  await plus.click();
   await page.getByRole('button', { name: 'Zurücksetzen' }).click();
   await expect(page.locator('#counter')).toHaveText('0');
+  await expect(minus).toBeDisabled();
 });
 
 test('Neue Botschaften wiederholen sich nicht direkt', async ({ page }) => {
