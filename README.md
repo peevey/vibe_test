@@ -78,7 +78,7 @@ Der Workflow `Pages and PR previews` veröffentlicht die Hauptseite und zusätzl
 https://peevey.github.io/vibe_test/previews/pr-<Nummer>/
 ```
 
-Die Vorschauen werden beim Öffnen, Aktualisieren und Schließen eines Pull Requests neu aufgebaut. Geschlossene Vorschauen verschwinden nach dem nächsten erfolgreichen Deployment. Die Hauptseite bleibt auf dem Stand von `main`. Der Link steht auch in der Zusammenfassung des Deployment-Laufs unter Actions. Tests und Vorschau sind separate Ergebnisse; eine erreichbare Vorschau bedeutet nicht, dass die Tests bestanden sind.
+Die Vorschauen werden beim Öffnen, Aktualisieren und Schließen eines Pull Requests neu aufgebaut. Geschlossene Vorschauen verschwinden nach dem nächsten erfolgreichen Deployment. Die Hauptseite bleibt auf dem Stand von `main`. Nach erfolgreicher Veröffentlichung steht der Link direkt im Pull Request als Kommentar von `github-actions[bot]` sowie in der Zusammenfassung des Deployment-Laufs unter Actions. Der Bot aktualisiert seinen vorhandenen Kommentar, statt bei jedem Deployment einen neuen anzulegen. Tests und Vorschau sind separate Ergebnisse; eine erreichbare Vorschau bedeutet nicht, dass die Tests bestanden sind.
 
 Aktuell wird ausschließlich die eigenständige `index.html` kopiert. Für Apps mit zusätzlichen Bildern, CSS- oder JavaScript-Dateien muss der Builder erweitert werden. Pull Requests aus Forks erhalten keine Vorschau. Anwendungscode aus PRs wird im Deployment-Runner nicht ausgeführt. Die Vorschau ist öffentlich und teilt die Website-Origin mit der Hauptseite; daher nur vertrauenswürdige Beiträge verwenden und keine sensiblen Daten auf diesen Seiten speichern.
 
