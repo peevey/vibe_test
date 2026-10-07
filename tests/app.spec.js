@@ -2,24 +2,16 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => { await page.goto('/index.html'); });
 
-test('Smiley steht über der Überschrift und dreht sich dauerhaft', async ({ page }) => {
+test('Smiley steht über der Überschrift und dreht sich nicht', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
   await expect(smiley).toBeVisible();
+  await expect(smiley).toHaveCSS('font-size', '96px');
   const smileyBox = await smiley.boundingBox();
   const headingBox = await page.getByRole('heading', { level: 1 }).boundingBox();
   expect(smileyBox.y + smileyBox.height).toBeLessThan(headingBox.y);
-  await smiley.evaluate(el => {
-    const animation = el.getAnimations()[0];
-    animation.pause();
-    animation.currentTime = 0;
-  });
-  const initial = await smiley.evaluate(el => getComputedStyle(el).transform);
-  await smiley.evaluate(el => { el.getAnimations()[0].currentTime = 1500; });
-  expect(await smiley.evaluate(el => getComputedStyle(el).transform)).not.toBe(initial);
-  const timing = await smiley.evaluate(el => el.getAnimations()[0].effect.getTiming());
-  expect(timing.duration).toBe(6000);
-  expect(timing.iterations).toBe(Infinity);
+  await expect(smiley).toHaveCSS('animation-name', 'none');
+  await expect(smiley).toHaveCSS('transform', 'none');
 });
 
 test('Smiley bleibt bei reduzierter Bewegung still', async ({ page }) => {
@@ -149,19 +141,19 @@ test('Hauptseite und PR-Vorschau speichern getrennte Zählerstände', async ({ p
   await expect(page.locator('#counter')).toHaveText('1');
 });
 
-test('Smiley wechselt genau nach zehn Sekunden durch alle fünf Gesichter', async ({ page }) => {
+test('Smiley wechselt genau nach drei Sekunden durch alle fünf Gesichter', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
   const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
   await expect(smiley).toHaveText('🙂');
-  await page.clock.runFor(9999);
+  await page.clock.runFor(2999);
   await expect(smiley).toHaveText('🙂');
   await page.clock.runFor(1);
   await expect(smiley).toHaveText('😄');
   for (const face of ['😎', '🤩', '😊', '🙂']) {
-    await page.clock.runFor(10000);
+    await page.clock.runFor(3000);
     await expect(smiley).toHaveText(face);
   }
 });
@@ -194,14 +186,14 @@ test('Smiley reagiert auf Änderungen der Bewegungseinstellung', async ({ page }
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
   const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
-  await page.clock.runFor(10000);
+  await page.clock.runFor(3000);
   await expect(smiley).toHaveText('😄');
   await changeMotionPreference('reduce');
   await expect(smiley).toHaveText('🙂');
   await page.clock.runFor(30000);
   await expect(smiley).toHaveText('🙂');
   await changeMotionPreference('no-preference');
-  await expect(smiley).toHaveCSS('animation-name', 'spin');
-  await page.clock.runFor(10000);
+  await expect(smiley).toHaveCSS('animation-name', 'none');
+  await page.clock.runFor(3000);
   await expect(smiley).toHaveText('😄');
 });

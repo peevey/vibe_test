@@ -13,7 +13,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## Ausprobieren
 
-- Der Smiley dreht sich und wechselt alle zehn Sekunden in der Reihenfolge 🙂 → 😄 → 😎 → 🤩 → 😊 → 🙂. Bei reduzierter Bewegung bleibt er still auf 🙂, auch wenn die Einstellung während der Nutzung geändert wird.
+- Der Smiley ist 96 Pixel groß, dreht sich nicht und wechselt alle drei Sekunden in der Reihenfolge 🙂 → 😄 → 😎 → 🤩 → 😊 → 🙂. Bei reduzierter Bewegung bleibt er still auf 🙂, auch wenn die Einstellung während der Nutzung geändert wird.
 
 - Einen Namen eingeben: Die Begrüßung passt sich an.
 - „Neue Willkommensbotschaft“ wählt zufällig eine andere Begrüßung und berücksichtigt deinen Namen.
@@ -36,7 +36,7 @@ npx playwright install --with-deps chromium
 npm test
 ```
 
-Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen vierzehn Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Smiley-Animation und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
+Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen vierzehn Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Smiley-Darstellung und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
 
 In der Codex-Cloud ist Chromium bereits unter `/usr/bin/chromium` installiert. Dort entfällt der Browserdownload:
 
