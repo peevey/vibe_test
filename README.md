@@ -18,6 +18,8 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - Auf „+1 Klick“ klicken: Der Zähler steigt.
 - Auf „−1 Klick“ klicken: Der Zähler sinkt bis null. Bei null ist der Button deaktiviert.
 - „Zurücksetzen“ setzt den Zähler auf null und deaktiviert den Minus-Button.
+- Der Zählerstand bleibt beim Neuladen im selben Browser erhalten. Hauptseite und jede PR-Vorschau speichern getrennte Werte. Nach dem Löschen der Website-Daten startet er wieder bei null.
+- Falls Browserspeicherung gesperrt ist, bleibt der Zähler bedienbar, wird aber nicht dauerhaft gespeichert.
 - „Farbe wechseln“ wechselt die Hintergrundfarbe.
 
 Alles steckt in `index.html`. Änderungen werden nach dem Neuladen sichtbar.
@@ -32,7 +34,7 @@ npx playwright install --with-deps chromium
 npm test
 ```
 
-Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen sieben Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Smiley-Animation und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
+Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen elf Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Smiley-Animation und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
 
 In der Codex-Cloud ist Chromium bereits unter `/usr/bin/chromium` installiert. Dort entfällt der Browserdownload:
 

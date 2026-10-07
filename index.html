@@ -57,7 +57,8 @@
     const greeting = document.querySelector('#greeting');
     const counter = document.querySelector('#counter');
     const decrementButton = document.querySelector('#decrement');
-    let clicks = 0;
+    const storageKey = `vibe-counter:${location.pathname.replace(/index\.html$/, '')}`;
+    let clicks = readCounter();
     let colorIndex = 0;
     const colors = ['#f1f3fa', '#e8f5ee', '#fff0df', '#f4eafb'];
 
@@ -78,7 +79,7 @@
       greeting.textContent = alternatives[Math.floor(Math.random() * alternatives.length)];
     });
     document.querySelector('#increment').addEventListener('click', () => {
-      clicks++;
+      clicks = Math.min(Number.MAX_SAFE_INTEGER, clicks + 1);
       updateCounter();
     });
     decrementButton.addEventListener('click', () => {
@@ -92,7 +93,23 @@
     function updateCounter() {
       counter.textContent = String(clicks);
       decrementButton.disabled = clicks === 0;
+      try {
+        localStorage.setItem(storageKey, String(clicks));
+      } catch {
+        // Der Zähler bleibt auch ohne verfügbare Browserspeicherung bedienbar.
+      }
     }
+    function readCounter() {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved === null || !/^\d+$/.test(saved)) return 0;
+        const value = Number(saved);
+        return Number.isSafeInteger(value) && value >= 0 ? value : 0;
+      } catch {
+        return 0;
+      }
+    }
+    updateCounter();
     document.querySelector('#color').addEventListener('click', () => {
       colorIndex = (colorIndex + 1) % colors.length;
       document.documentElement.style.backgroundColor = colors[colorIndex];
