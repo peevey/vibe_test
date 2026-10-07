@@ -27,7 +27,30 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - Falls Browserspeicherung gesperrt ist, bleibt der Zähler bedienbar, wird aber nicht dauerhaft gespeichert.
 - Das dauerhafte Weltall-Design zeigt einen dunklen Sternenhimmel mit langsam bewegten Raumschiffen, Planeten und Sternen hinter der dunkelblauen Karte. Der Farbwechsel-Button entfällt. Bei reduzierter Bewegung bleibt auch die Hintergrundszene still.
 
-Alles steckt in `index.html`. Änderungen werden nach dem Neuladen sichtbar.
+Alles steckt in `index.html`, einschließlich des Sternenhimmelbildes. Änderungen werden nach dem Neuladen sichtbar.
+
+### Sternenhimmel: Herkunft, Rechte und Einbindung
+
+Das Bild wurde für Ticket #48 mit `scripts/generate-starfield.py` eigenständig
+prozedural erzeugt; es enthält keine fremden Fotos oder Bildbestandteile.
+Das erzeugte Bild wird unter **CC0 1.0** bereitgestellt
+(https://creativecommons.org/publicdomain/zero/1.0/): freie Nutzung, Änderung und
+Weitergabe ohne Namensnennung. Es ist eine synthetische Darstellung, kein Foto.
+Unabhängig verteilte Positionen, unterschiedliche Helligkeiten, Größen und leicht
+variierende Sternfarben vermeiden Raster und Kachelnähte.
+
+Das 1920 × 1920 Pixel große WebP benötigt 27.000 Byte (36.000 Zeichen Base64)
+und steckt als `data:image/webp;base64,…` in `.starfield`. `cover`, `center` und
+`no-repeat` erhalten das Seitenverhältnis und beschneiden es bei Bedarf. Der
+fixierte Szenenrahmen und 40 Pixel Überstand decken auch beim Scrollen, Resize
+und an beiden Enden der vorhandenen Drift den Bildschirm ab. Als Ersatzfarbe
+bleibt `#070b1a` sichtbar. Das Bild benötigt weder Netzwerkabrufe noch neue
+Dateien im Vorschau-Builder; dessen unveränderte HTML-Kopie enthält es bereits.
+
+Zum Reproduzieren: Pillow 12.3.0 in einer Python-Umgebung installieren und
+`python scripts/generate-starfield.py` ausführen. Der feste Zufallsstartwert 48
+liefert dieselbe Verteilung; Python/Pillow werden nur zur Bildherstellung benötigt,
+nicht zur Laufzeit oder beim Pages-Build.
 
 ## Automatisierte Browsertests
 
@@ -39,7 +62,7 @@ npx playwright install --with-deps chromium
 npm test
 ```
 
-Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen zwanzig Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Weltall-Darstellung und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
+Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen die Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Weltall-Darstellung und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
 
 In der Codex-Cloud ist Chromium bereits unter `/usr/bin/chromium` installiert. Dort entfällt der Browserdownload:
 
