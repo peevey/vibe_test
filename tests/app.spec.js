@@ -91,3 +91,60 @@ test('Layout passt ohne horizontalen Überlauf und Buttons sind per Tastatur bed
   await page.keyboard.press('Enter');
   await expect(page.locator('#counter')).toHaveText('1');
 });
+
+test('Zählerstand und Minus-Button bleiben nach Neuladen erhalten', async ({ page }) => {
+  const plus = page.getByRole('button', { name: '+1 Klick', exact: true });
+  const minus = page.getByRole('button', { name: '−1 Klick', exact: true });
+  await plus.click();
+  await plus.click();
+  await page.reload();
+  await expect(page.locator('#counter')).toHaveText('2');
+  await expect(minus).toBeEnabled();
+  await minus.click();
+  await page.reload();
+  await expect(page.locator('#counter')).toHaveText('1');
+  await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+  await page.reload();
+  await expect(page.locator('#counter')).toHaveText('0');
+  await expect(minus).toBeDisabled();
+});
+
+test('Ungültige gespeicherte Zählerstände starten bei null', async ({ page }) => {
+  for (const value of ['abc', '-1', '1.5', '', 'Infinity', '9007199254740992']) {
+    await page.evaluate(value => localStorage.setItem('vibe-counter:/', value), value);
+    await page.reload();
+    await expect(page.locator('#counter')).toHaveText('0');
+    await expect(page.getByRole('button', { name: '−1 Klick', exact: true })).toBeDisabled();
+  }
+});
+
+test('Zähler funktioniert auch bei gesperrter Browserspeicherung', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', { get() { throw new Error('Storage blocked'); } });
+  });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.reload();
+  await expect(page.locator('#counter')).toHaveText('0');
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
+  await expect(page.locator('#counter')).toHaveText('1');
+  await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+  await expect(page.locator('#counter')).toHaveText('0');
+  expect(errors).toEqual([]);
+});
+
+test('Hauptseite und PR-Vorschau speichern getrennte Zählerstände', async ({ page }) => {
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
+  await page.route('**/previews/pr-10/', async route => {
+    const response = await page.request.get('/index.html');
+    await route.fulfill({ response });
+  });
+  await page.goto('/previews/pr-10/');
+  await expect(page.locator('#counter')).toHaveText('0');
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
+  await page.reload();
+  await expect(page.locator('#counter')).toHaveText('2');
+  await page.goto('/index.html');
+  await expect(page.locator('#counter')).toHaveText('1');
+});
