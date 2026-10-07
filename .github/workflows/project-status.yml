@@ -1,0 +1,58 @@
+name: Project status
+on:
+  issues:
+    types: [labeled, unlabeled]
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  workflow_run:
+    workflows: [Browser tests]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number
+        required: true
+        type: string
+      status:
+        description: Explicitly authorized status
+        required: true
+        type: choice
+        options: [Ready, In Progress]
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  checks: read
+concurrency:
+  group: project-status
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: github.event_name != 'issues' || startsWith(github.event.label.name, 'workflow:')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Validate Project configuration
+        env:
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+          PROJECTS_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+        run: |
+          test -n "$PROJECT_NUMBER" || { echo 'Set the repository variable PROJECT_NUMBER to your GitHub Project number.'; exit 1; }
+          test -n "$PROJECTS_TOKEN" || { echo 'Set the repository Actions secret PROJECTS_TOKEN with Project write access.'; exit 1; }
+      - name: Update linked issue status
+        uses: actions/github-script@v7
+        env:
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+        with:
+          github-token: ${{ secrets.PROJECTS_TOKEN }}
+          script: |
+            const { setProjectStatus, processEvent } = require('./.github/scripts/project-status.cjs');
+            const projectNumber = Number(process.env.PROJECT_NUMBER);
+            if (!Number.isSafeInteger(projectNumber) || projectNumber <= 0) throw new Error('Invalid PROJECT_NUMBER');
+            await processEvent({ github, context,
+              update: (contentId, status) => setProjectStatus({ github,
+                owner: context.repo.owner, projectNumber, contentId, status }) });
