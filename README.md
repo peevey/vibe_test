@@ -13,10 +13,10 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## Ausprobieren
 
-- Die Hauptüberschrift verwendet eine verspielte lokale Schrift mit einem Verlauf von Violett zu Pink. Die verfügbare Schrift hängt vom Gerät ab; ohne Verlaufstext-Unterstützung bleibt die Schrift violett.
+- Die Hauptüberschrift verwendet eine verspielte lokale Schrift mit einem Verlauf von Hellviolett zu Rosa. Die verfügbare Schrift hängt vom Gerät ab; ohne Verlaufstext-Unterstützung bleibt die Schrift hellviolett.
 
-- Zwei 96 Pixel große Smileys stehen nebeneinander und drehen sich nicht. Der erste wechselt alle drei Sekunden in der Reihenfolge 🙂 → 😄 → 😎 → 🤩 → 😊 → 🙂. Der zweite wechselt 😀 → 😁 → 😆 → 🥳 → 😇 → 😀, mit dem ersten Wechsel nach 1,5 Sekunden und danach alle drei Sekunden.
-- Bei reduzierter Bewegung bleiben beide auf ihren Startgesichtern 🙂 und 😀. Nach Deaktivierung dieser Einstellung startet der versetzte Zeitplan erneut.
+- Zwei 96 Pixel große Weltall-Symbole stehen nebeneinander und drehen sich nicht. Der erste wechselt alle drei Sekunden in der Reihenfolge 🚀 → 🪐 → ⭐ → 🌙 → 🛸 → 🚀. Der zweite wechselt 🌍 → ☄️ → 🌟 → 🌌 → 👽 → 🌍, mit dem ersten Wechsel nach 1,5 Sekunden und danach alle drei Sekunden.
+- Bei reduzierter Bewegung bleiben beide auf ihren Startsymbolen 🚀 und 🌍. Nach Deaktivierung dieser Einstellung startet der versetzte Zeitplan erneut.
 
 - Einen Namen eingeben: Die Begrüßung passt sich an.
 - „Neue Willkommensbotschaft“ wählt zufällig eine andere Begrüßung und berücksichtigt deinen Namen.
@@ -25,7 +25,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - „Zurücksetzen“ setzt den Zähler auf null und deaktiviert den Minus-Button.
 - Der Zählerstand bleibt beim Neuladen im selben Browser erhalten. Hauptseite und jede PR-Vorschau speichern getrennte Werte. Nach dem Löschen der Website-Daten startet er wieder bei null.
 - Falls Browserspeicherung gesperrt ist, bleibt der Zähler bedienbar, wird aber nicht dauerhaft gespeichert.
-- „Farbe wechseln“ wechselt die Hintergrundfarbe.
+- Das dauerhafte Weltall-Design zeigt einen dunklen Sternenhimmel mit langsam bewegten Raumschiffen, Planeten und Sternen hinter der dunkelblauen Karte. Der Farbwechsel-Button entfällt. Bei reduzierter Bewegung bleibt auch die Hintergrundszene still.
 
 Alles steckt in `index.html`. Änderungen werden nach dem Neuladen sichtbar.
 
@@ -39,7 +39,7 @@ npx playwright install --with-deps chromium
 npm test
 ```
 
-Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen neunzehn Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Smiley-Darstellung und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
+Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen zwanzig Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Weltall-Darstellung und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
 
 In der Codex-Cloud ist Chromium bereits unter `/usr/bin/chromium` installiert. Dort entfällt der Browserdownload:
 
