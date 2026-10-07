@@ -69,3 +69,26 @@ Unter **Settings → General → Pull Requests** „Allow merge commits“ aktiv
 ### Eine Änderung zurücknehmen
 
 Einen neuen Branch vom aktuellen `main` erstellen, `git revert <Commit-ID>` ausführen, testen und einen Pull Request öffnen. Nach dem Merge veröffentlicht Pages die Rücknahme automatisch, sofern Pages für `main` aktiviert ist.
+
+## Vorschau pro Pull Request
+
+Der Workflow `Pages and PR previews` veröffentlicht die Hauptseite und zusätzliche Vorschauen offener Pull Requests aus diesem Repository:
+
+```text
+https://peevey.github.io/vibe_test/previews/pr-<Nummer>/
+```
+
+Die Vorschauen werden beim Öffnen, Aktualisieren und Schließen eines Pull Requests neu aufgebaut. Geschlossene Vorschauen verschwinden nach dem nächsten erfolgreichen Deployment. Die Hauptseite bleibt auf dem Stand von `main`. Der Link steht auch in der Zusammenfassung des Deployment-Laufs unter Actions. Tests und Vorschau sind separate Ergebnisse; eine erreichbare Vorschau bedeutet nicht, dass die Tests bestanden sind.
+
+Aktuell wird ausschließlich die eigenständige `index.html` kopiert. Für Apps mit zusätzlichen Bildern, CSS- oder JavaScript-Dateien muss der Builder erweitert werden. Pull Requests aus Forks erhalten keine Vorschau. Anwendungscode aus PRs wird im Deployment-Runner nicht ausgeführt. Die Vorschau ist öffentlich und teilt die Website-Origin mit der Hauptseite; daher nur vertrauenswürdige Beiträge verwenden und keine sensiblen Daten auf diesen Seiten speichern.
+
+### Einmalige Aktivierung nach dem Merge
+
+1. Unter **Settings → Pages → Build and deployment → Source** auf **GitHub Actions** umstellen.
+2. Falls das Environment `github-pages` Branch-Einschränkungen hat: Unter **Settings → Environments → github-pages** den Branch `main` für Deployments erlauben. Der Workflow führt PR-Deployments im Kontext des Zielbranches aus.
+3. Unter **Actions → Pages and PR previews → Run workflow** den Branch `main` auswählen und einmal starten.
+4. Den erfolgreichen Lauf und die Hauptseite prüfen. Beim nächsten offenen Pull Request die Vorschau prüfen.
+
+Der initiale Infrastruktur-PR kann noch keine eigene Vorschau erzeugen, weil GitHub den vertrauenswürdigen Workflow erst nach dem Merge von `main` ausführt.
+
+Der Builder wird mit `npm run test:pages` getestet. Dieser Test prüft Hauptseite, Vorschau, Ausschluss von Forks und das Entfernen geschlossener Vorschauen. Die Browsertests laufen weiterhin mit `npm test`.
