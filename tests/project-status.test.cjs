@@ -68,7 +68,7 @@ test('Project mutation uses the correct single-select status option', async () =
   const calls = [];
   const github = { graphql: async (query, variables) => {
     calls.push(variables);
-    if (query.startsWith('query')) return { user: { projectV2: { id: 'project', fields: { pageInfo: { hasNextPage: false }, nodes: [{ id: 'status-field', name: 'Status', options: [{ id: 'review-option', name: 'In Review' }] }] } } } };
+    if (query.startsWith('query')) return { user: { projectV2: { id: 'project', fields: { pageInfo: { hasNextPage: false }, nodes: [{ id: 'status-field', name: 'Status', options: [{ id: 'review-option', name: 'In review' }] }] } } } };
     if (query.includes('addProjectV2ItemById')) return { addProjectV2ItemById: { item: { id: 'item' } } };
     return {};
   } };
