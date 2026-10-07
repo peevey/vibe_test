@@ -46,6 +46,44 @@ async function linkedIssues({ github, owner, repo, number }) {
   return issues.nodes.filter(i => i.repository.nameWithOwner === `${owner}/${repo}`);
 }
 
+async function activeIssuePull({ github, owner, repo, number }) {
+  const data = await github.graphql(`query($owner:String!,$repo:String!,$number:Int!) {
+    repository(owner:$owner,name:$repo) { issue(number:$number) {
+      closedByPullRequestsReferences(first:100,includeClosedPrs:false) {
+        pageInfo { hasNextPage } nodes {
+          number state baseRefName headRepository { nameWithOwner }
+        }
+      }
+    } }
+  }`, { owner, repo, number });
+  const references = data.repository.issue.closedByPullRequestsReferences;
+  if (references.pageInfo.hasNextPage) throw new Error('More than 100 linked PRs; pagination required');
+  const candidates = references.nodes.filter(p => p.state === 'OPEN' &&
+    p.baseRefName === 'main' && p.headRepository?.nameWithOwner === `${owner}/${repo}`);
+  if (candidates.length > 1) throw new Error(`Issue #${number} has multiple active PRs; use one active PR per issue`);
+  if (!candidates.length) return null;
+  const { data: pull } = await github.rest.pulls.get({ owner, repo, pull_number: candidates[0].number });
+  return isProjectPull(pull, owner, repo) ? pull : null;
+}
+
+function isProjectPull(pull, owner, repo) {
+  return pull.state === 'open' && pull.base.ref === 'main' &&
+    pull.head.repo?.full_name === `${owner}/${repo}`;
+}
+
+async function currentTestStatus({ github, owner, repo, pull }) {
+  if (pull.draft) return 'In Progress';
+  const checks = await github.paginate(github.rest.checks.listForRef, {
+    owner, repo, ref: pull.head.sha, filter: 'latest', per_page: 100
+  });
+  const tests = checks.filter(c => c.name === 'browser-tests' && c.app?.slug === 'github-actions');
+  const status = tests.length && tests.every(c => c.conclusion === 'success') ? 'In Review' : 'In Progress';
+  // A newer commit or conversion to draft must not inherit the old green checks.
+  const { data: latest } = await github.rest.pulls.get({ owner, repo, pull_number: pull.number });
+  if (!isProjectPull(latest, owner, repo)) return null;
+  return latest.head.sha === pull.head.sha && !latest.draft ? status : 'In Progress';
+}
+
 async function processEvent({ github, context, update }) {
   const { owner, repo } = context.repo;
   const payload = context.payload;
@@ -55,11 +93,18 @@ async function processEvent({ github, context, update }) {
     await update(issue.node_id, status);
   }
   if (context.eventName === 'issues') {
+    const label = payload.label?.name;
+    if (payload.action !== 'labeled' || !['workflow:ready', 'workflow:in-progress'].includes(label)) return;
     const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: payload.issue.number });
-    if (issue.state !== 'open') return;
+    if (issue.state !== 'open' || issue.pull_request) return;
     const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name);
-    const status = labels.includes('workflow:in-progress') ? 'In Progress' : labels.includes('workflow:ready') ? 'Ready' : null;
-    if (status) await update(issue.node_id, status);
+    // Ignore a queued command if its label has already been removed.
+    if (!labels.includes(label)) return;
+    const pull = await activeIssuePull({ github, owner, repo, number: payload.issue.number });
+    const status = pull
+      ? await currentTestStatus({ github, owner, repo, pull })
+      : labels.includes('workflow:in-progress') ? 'In Progress' : 'Ready';
+    if (status) await updateIssue(payload.issue.number, status);
     return;
   }
   if (context.eventName === 'workflow_dispatch') {
@@ -67,34 +112,29 @@ async function processEvent({ github, context, update }) {
     return;
   }
   let pulls;
-  let status;
   if (context.eventName === 'workflow_run') {
     const run = payload.workflow_run;
     if (run.event !== 'pull_request') return;
     pulls = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, { owner, repo, commit_sha: run.head_sha, per_page: 100 });
-    status = run.conclusion === 'success' ? 'In Review' : 'In Progress';
     pulls = pulls.filter(p => p.head.sha === run.head_sha);
   } else if (context.eventName === 'pull_request_target') {
     const { data: pull } = await github.rest.pulls.get({ owner, repo, pull_number: payload.pull_request.number });
     // Ignore delayed events for older commits.
     if (pull.head.sha !== payload.pull_request.head.sha) return;
     pulls = [pull];
-    status = 'In Progress';
-    // A delayed PR event must not undo a successful test result.
-    const checks = await github.paginate(github.rest.checks.listForRef, { owner, repo, ref: pull.head.sha, filter: 'latest', per_page: 100 });
-    const tests = checks.filter(c => c.name === 'browser-tests' && c.app?.slug === 'github-actions');
-    if (tests.length && tests.every(c => c.conclusion === 'success')) status = 'In Review';
   } else return;
   for (const pull of pulls) {
     const { data: current } = await github.rest.pulls.get({ owner, repo, pull_number: pull.number });
-    if (current.state !== 'open' || current.draft || current.base.ref !== 'main' || current.head.repo?.full_name !== `${owner}/${repo}` || current.head.sha !== pull.head.sha) continue;
-    if (context.eventName === 'workflow_run') {
-      // A rerun can supersede an older result even when the commit SHA is unchanged.
-      const checks = await github.paginate(github.rest.checks.listForRef, { owner, repo, ref: current.head.sha, filter: 'latest', per_page: 100 });
-      const tests = checks.filter(c => c.name === 'browser-tests' && c.app?.slug === 'github-actions');
-      status = tests.length && tests.every(c => c.conclusion === 'success') ? 'In Review' : 'In Progress';
+    if (!isProjectPull(current, owner, repo) || current.draft || current.head.sha !== pull.head.sha) continue;
+    // Both label events and PR events use the current check results, including reruns.
+    const status = await currentTestStatus({ github, owner, repo, pull: current });
+    if (!status) continue;
+    for (const issue of await linkedIssues({ github, owner, repo, number: pull.number })) {
+      const active = await activeIssuePull({ github, owner, repo, number: issue.number });
+      // Do not write a result for a PR that is no longer the active, current one.
+      if (!active || active.number !== current.number || active.head.sha !== current.head.sha) continue;
+      await updateIssue(issue.number, status);
     }
-    for (const issue of await linkedIssues({ github, owner, repo, number: pull.number })) await updateIssue(issue.number, status);
   }
 }
 module.exports = { inspectProject, setProjectStatus, processEvent };
