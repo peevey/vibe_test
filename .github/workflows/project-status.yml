@@ -36,14 +36,29 @@ jobs:
         with:
           ref: main
           persist-credentials: false
-      - name: Validate Project configuration
+      - name: Check activation and configuration
+        id: config
+        uses: actions/github-script@v7
         env:
+          PROJECT_STATUS_ENABLED: ${{ vars.PROJECT_STATUS_ENABLED }}
           PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
           PROJECTS_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
-        run: |
-          test -n "$PROJECT_NUMBER" || { echo 'Set the repository variable PROJECT_NUMBER to your GitHub Project number.'; exit 1; }
-          test -n "$PROJECTS_TOKEN" || { echo 'Set the repository Actions secret PROJECTS_TOKEN with Project write access.'; exit 1; }
+        with:
+          script: |
+            const { prepareProjectConfig } = require('./.github/scripts/project-config.cjs');
+            const config = prepareProjectConfig({
+              enabled: process.env.PROJECT_STATUS_ENABLED,
+              projectNumber: process.env.PROJECT_NUMBER,
+              hasToken: Boolean(process.env.PROJECTS_TOKEN) });
+            core.setOutput('active', String(config.active));
+            if (!config.active) {
+              await core.summary.addHeading('Nicht aktiviert')
+                .addRaw('Die Board-Automatisierung ist deaktiviert. Kein Board-Status wurde geändert. Bitte den Status manuell pflegen.\n\n')
+                .addLink('Setup-Anleitung', `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/README.md#einmaliges-setup`)
+                .write();
+            }
       - name: Update linked issue status
+        if: steps.config.outputs.active == 'true'
         uses: actions/github-script@v7
         env:
           PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}

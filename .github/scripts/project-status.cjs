@@ -1,5 +1,5 @@
 // Project operations use a separate token; PR content is never executed.
-async function setProjectStatus({ github, owner, projectNumber, contentId, status }) {
+async function inspectProject({ github, owner, projectNumber, statuses }) {
   const data = await github.graphql(`query($owner:String!,$number:Int!) {
     user(login:$owner) { projectV2(number:$number) {
       id fields(first:100) { pageInfo { hasNextPage } nodes {
@@ -11,8 +11,15 @@ async function setProjectStatus({ github, owner, projectNumber, contentId, statu
   if (!project) throw new Error('Project not found or token lacks Project access');
   if (project.fields.pageInfo.hasNextPage) throw new Error('Project has more than 100 fields; pagination required');
   const field = project.fields.nodes.find(f => f?.name === 'Status');
-  const option = field?.options.find(o => o.name === status);
-  if (!option) throw new Error(`Project Status option missing: ${status}`);
+  for (const status of statuses) {
+    if (!field?.options.some(o => o.name === status)) throw new Error(`Project Status option missing: ${status}`);
+  }
+  return { project, field };
+}
+
+async function setProjectStatus({ github, owner, projectNumber, contentId, status }) {
+  const { project, field } = await inspectProject({ github, owner, projectNumber, statuses: [status] });
+  const option = field.options.find(o => o.name === status);
   // GitHub returns the existing item if the issue is already in the Project.
   const added = await github.graphql(`mutation($project:ID!,$content:ID!) {
     addProjectV2ItemById(input:{projectId:$project,contentId:$content}) { item { id } }
@@ -84,4 +91,4 @@ async function processEvent({ github, context, update }) {
     for (const issue of await linkedIssues({ github, owner, repo, number: pull.number })) await updateIssue(issue.number, status);
   }
 }
-module.exports = { setProjectStatus, processEvent };
+module.exports = { inspectProject, setProjectStatus, processEvent };

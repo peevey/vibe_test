@@ -1,0 +1,58 @@
+name: Project setup check
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Open test issue to add to the Project and set to Ready
+        required: true
+        type: string
+      confirm_write:
+        description: I authorize adding this test issue to the Project and setting it to Ready
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  issues: read
+concurrency:
+  group: project-status
+  cancel-in-progress: false
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Validate setup configuration
+        uses: actions/github-script@v7
+        env:
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+          PROJECTS_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          CONFIRM_WRITE: ${{ inputs.confirm_write }}
+        with:
+          script: |
+            if (process.env.CONFIRM_WRITE !== 'true') throw new Error('Confirm the test issue write before running setup.');
+            const { prepareProjectConfig } = require('./.github/scripts/project-config.cjs');
+            prepareProjectConfig({ setup: true, projectNumber: process.env.PROJECT_NUMBER,
+              hasToken: Boolean(process.env.PROJECTS_TOKEN) });
+      - name: Verify Project and perform authorized write
+        uses: actions/github-script@v7
+        env:
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+          TEST_ISSUE_NUMBER: ${{ inputs.issue_number }}
+          CONFIRM_WRITE: ${{ inputs.confirm_write }}
+        with:
+          github-token: ${{ secrets.PROJECTS_TOKEN }}
+          script: |
+            const { runProjectSetup } = require('./.github/scripts/project-config.cjs');
+            const result = await runProjectSetup({ github, ...context.repo,
+              projectNumber: Number(process.env.PROJECT_NUMBER),
+              issueNumber: process.env.TEST_ISSUE_NUMBER,
+              confirm: process.env.CONFIRM_WRITE === 'true' });
+            await core.summary.addHeading('Setup-Check erfolgreich')
+              .addRaw(`Project erreichbar, Statusoptionen vorhanden und Schreibprobe bestätigt: Issue #${result.issueNumber} steht jetzt auf Ready.\n\n`)
+              .addRaw('Die Automatisierung wurde nicht aktiviert. Nach Sichtprüfung im Board PROJECT_STATUS_ENABLED bewusst auf true setzen. Done bleibt manuell.')
+              .write();
