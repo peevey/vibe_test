@@ -62,3 +62,17 @@ test('A denied Project write remains a failure', async () => {
   };
   await assert.rejects(runProjectSetup(f), /write denied/);
 });
+
+test('Setup accepts the default lowercase progress and review labels', async () => {
+  const f = setupFixture();
+  f.options.splice(0, f.options.length, 'Ready', 'In progress', 'In review');
+  await runProjectSetup(f);
+  assert.equal(f.writes[1].option, 'Ready');
+});
+
+test('Ambiguous status options are rejected before any write', async () => {
+  const f = setupFixture();
+  f.options.push('ready');
+  await assert.rejects(runProjectSetup(f), /option ambiguous: Ready/);
+  assert.deepEqual(f.writes, []);
+});

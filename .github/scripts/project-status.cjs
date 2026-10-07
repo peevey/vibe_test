@@ -1,4 +1,10 @@
 // Project operations use a separate token; PR content is never executed.
+function findStatusOption(field, status) {
+  const matches = field?.options.filter(option => option.name.toLowerCase() === status.toLowerCase()) || [];
+  if (!matches.length) throw new Error(`Project Status option missing: ${status}`);
+  if (matches.length > 1) throw new Error(`Project Status option ambiguous: ${status}`);
+  return matches[0];
+}
 async function inspectProject({ github, owner, projectNumber, statuses }) {
   const data = await github.graphql(`query($owner:String!,$number:Int!) {
     user(login:$owner) { projectV2(number:$number) {
@@ -12,14 +18,14 @@ async function inspectProject({ github, owner, projectNumber, statuses }) {
   if (project.fields.pageInfo.hasNextPage) throw new Error('Project has more than 100 fields; pagination required');
   const field = project.fields.nodes.find(f => f?.name === 'Status');
   for (const status of statuses) {
-    if (!field?.options.some(o => o.name === status)) throw new Error(`Project Status option missing: ${status}`);
+    findStatusOption(field, status);
   }
   return { project, field };
 }
 
 async function setProjectStatus({ github, owner, projectNumber, contentId, status }) {
   const { project, field } = await inspectProject({ github, owner, projectNumber, statuses: [status] });
-  const option = field.options.find(o => o.name === status);
+  const option = findStatusOption(field, status);
   // GitHub returns the existing item if the issue is already in the Project.
   const added = await github.graphql(`mutation($project:ID!,$content:ID!) {
     addProjectV2ItemById(input:{projectId:$project,contentId:$content}) { item { id } }
