@@ -33,6 +33,7 @@
       <label for="name">Wie heißt du?</label>
       <input id="name" placeholder="Dein Name" maxlength="80" autocomplete="given-name">
       <p id="greeting" aria-live="polite">Hallo! Schön, dass du da bist.</p>
+      <button id="welcome" class="secondary" type="button">Neue Willkommensbotschaft</button>
     </section>
     <section aria-labelledby="counter-label">
       <label id="counter-label">Dein Klick-Zähler</label>
@@ -57,6 +58,18 @@
     nameInput.addEventListener('input', () => {
       const name = nameInput.value.trim();
       greeting.textContent = name ? `Hallo, ${name}! Schön, dass du da bist.` : 'Hallo! Schön, dass du da bist.';
+    });
+    document.querySelector('#welcome').addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      const salutation = name ? `Hallo, ${name}!` : 'Hallo!';
+      const messages = [
+        `${salutation} Willkommen in deinem kleinen HTML-Labor.`,
+        `${salutation} Heute ist ein guter Tag zum Experimentieren.`,
+        `${salutation} Schön, dass du mit uns Neues ausprobierst.`,
+        `${salutation} Viel Spaß beim Klicken und Entdecken!`,
+      ];
+      const alternatives = messages.filter(message => message !== greeting.textContent);
+      greeting.textContent = alternatives[Math.floor(Math.random() * alternatives.length)];
     });
     document.querySelector('#increment').addEventListener('click', () => {
       counter.textContent = String(++clicks);
