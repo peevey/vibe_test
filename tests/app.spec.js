@@ -6,6 +6,7 @@ test('Smiley steht über der Überschrift und dreht sich nicht', async ({ page }
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
   await expect(smiley).toBeVisible();
+  await expect(smiley).toHaveCSS('font-size', '96px');
   const smileyBox = await smiley.boundingBox();
   const headingBox = await page.getByRole('heading', { level: 1 }).boundingBox();
   expect(smileyBox.y + smileyBox.height).toBeLessThan(headingBox.y);

@@ -13,7 +13,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## Ausprobieren
 
-- Der Smiley dreht sich nicht und wechselt alle zehn Sekunden in der Reihenfolge 🙂 → 😄 → 😎 → 🤩 → 😊 → 🙂. Bei reduzierter Bewegung bleibt er still auf 🙂, auch wenn die Einstellung während der Nutzung geändert wird.
+- Der Smiley ist 96 Pixel groß, dreht sich nicht und wechselt alle zehn Sekunden in der Reihenfolge 🙂 → 😄 → 😎 → 🤩 → 😊 → 🙂. Bei reduzierter Bewegung bleibt er still auf 🙂, auch wenn die Einstellung während der Nutzung geändert wird.
 
 - Einen Namen eingeben: Die Begrüßung passt sich an.
 - „Neue Willkommensbotschaft“ wählt zufällig eine andere Begrüßung und berücksichtigt deinen Namen.
