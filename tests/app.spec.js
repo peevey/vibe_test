@@ -1,0 +1,49 @@
+const { test, expect } = require('@playwright/test');
+
+test.beforeEach(async ({ page }) => { await page.goto('/index.html'); });
+
+test('Begrüßung berücksichtigt Namen und leere Eingaben', async ({ page }) => {
+  await page.getByLabel('Wie heißt du?').fill(' Ada ');
+  await expect(page.locator('#greeting')).toHaveText('Hallo, Ada! Schön, dass du da bist.');
+  await page.getByLabel('Wie heißt du?').fill(' ');
+  await expect(page.locator('#greeting')).toHaveText('Hallo! Schön, dass du da bist.');
+});
+
+test('Zähler zählt in beide Richtungen und lässt sich zurücksetzen', async ({ page }) => {
+  await page.getByRole('button', { name: '−1 Klick', exact: true }).click();
+  await expect(page.locator('#counter')).toHaveText('-1');
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
+  await expect(page.locator('#counter')).toHaveText('1');
+  await page.getByRole('button', { name: 'Zurücksetzen' }).click();
+  await expect(page.locator('#counter')).toHaveText('0');
+});
+
+test('Neue Botschaften wiederholen sich nicht direkt', async ({ page }) => {
+  await page.getByLabel('Wie heißt du?').fill('Ada');
+  for (let i = 0; i < 8; i++) {
+    const previous = await page.locator('#greeting').textContent();
+    await page.getByRole('button', { name: 'Neue Willkommensbotschaft' }).click();
+    await expect(page.locator('#greeting')).not.toHaveText(previous);
+    await expect(page.locator('#greeting')).toContainText('Hallo, Ada!');
+  }
+  await page.getByLabel('Wie heißt du?').fill('');
+  await page.getByRole('button', { name: 'Neue Willkommensbotschaft' }).click();
+  await expect(page.locator('#greeting')).toContainText('Hallo!');
+});
+
+test('Hintergrundfarbe wechselt und kehrt nach vier Klicks zurück', async ({ page }) => {
+  const background = () => page.locator('html').evaluate(el => getComputedStyle(el).backgroundColor);
+  const initial = await background();
+  await page.getByRole('button', { name: 'Farbe wechseln' }).click();
+  expect(await background()).not.toBe(initial);
+  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Farbe wechseln' }).click();
+  expect(await background()).toBe(initial);
+});
+
+test('Layout passt ohne horizontalen Überlauf und Buttons sind per Tastatur bedienbar', async ({ page }) => {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#counter')).toHaveText('1');
+});
