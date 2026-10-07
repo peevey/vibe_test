@@ -20,6 +20,7 @@ jobs:
           python-version: '3.x'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:pages
       - run: npm test
       - uses: actions/upload-artifact@v4
         if: always()
