@@ -75,7 +75,7 @@
       smileyTimer = setInterval(() => {
         smileyIndex = (smileyIndex + 1) % smileys.length;
         smiley.textContent = smileys[smileyIndex];
-      }, 10000);
+      }, 3000);
     }
     reducedMotion.addEventListener('change', configureSmileyCycle);
     configureSmileyCycle();
