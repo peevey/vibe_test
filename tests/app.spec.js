@@ -69,11 +69,18 @@ test('Neue Botschaften wiederholen sich nicht direkt', async ({ page }) => {
 });
 
 test('Hintergrundfarbe wechselt und kehrt nach vier Klicks zurück', async ({ page }) => {
+  const card = page.getByRole('main');
+  await expect(card).toHaveCSS('background-color', 'rgb(232, 245, 238)');
   const background = () => page.locator('html').evaluate(el => getComputedStyle(el).backgroundColor);
   const initial = await background();
+  expect(initial).toBe('rgb(241, 243, 250)');
   await page.getByRole('button', { name: 'Farbe wechseln' }).click();
   expect(await background()).not.toBe(initial);
-  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Farbe wechseln' }).click();
+  await expect(card).toHaveCSS('background-color', 'rgb(232, 245, 238)');
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: 'Farbe wechseln' }).click();
+    await expect(card).toHaveCSS('background-color', 'rgb(232, 245, 238)');
+  }
   expect(await background()).toBe(initial);
 });
 
