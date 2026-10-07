@@ -61,6 +61,26 @@
     let clicks = readCounter();
     let colorIndex = 0;
     const colors = ['#f1f3fa', '#e8f5ee', '#fff0df', '#f4eafb'];
+    const smiley = document.querySelector('.smiley');
+    const smileys = ['🙂', '😄', '😎', '🤩', '😊'];
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let smileyIndex = 0;
+    let smileyTimer;
+
+    function configureSmileyCycle() {
+      clearInterval(smileyTimer);
+      if (reducedMotion.matches) {
+        smileyIndex = 0;
+        smiley.textContent = smileys[0];
+        return;
+      }
+      smileyTimer = setInterval(() => {
+        smileyIndex = (smileyIndex + 1) % smileys.length;
+        smiley.textContent = smileys[smileyIndex];
+      }, 10000);
+    }
+    reducedMotion.addEventListener('change', configureSmileyCycle);
+    configureSmileyCycle();
 
     nameInput.addEventListener('input', () => {
       const name = nameInput.value.trim();
