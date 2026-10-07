@@ -5,6 +5,8 @@ Dieses Repository ist ein Schulungsprojekt für einen GitHub-Workflow. Der Nutze
 ## Aufgaben und Git
 
 - Beschreibe neue Aufgaben zuerst in einem Issue mit klaren Akzeptanzkriterien. Verwende ein vorhandenes Issue; lege kein Duplikat an. Bei einer neuen, bereits autorisierten Aufgabe darfst du selbst ein Issue anlegen. Kläre nur offene Fragen, die die Umsetzung wesentlich beeinflussen.
+- Trenne Refinement und Umsetzung: Nach abgestimmten Akzeptanzkriterien aktualisiere nur das Issue und setze das Label `workflow:ready`. Eine Zustimmung wie „Passt so“ ist kein Umsetzungsauftrag. Beginne Branch, Code und Tests erst nach einem separaten ausdrücklichen Auftrag, z. B. „Setze Issue #20 um“.
+- Beim ausdrücklichen Umsetzungsauftrag entferne `workflow:ready` und setze `workflow:in-progress` auf dem Issue. Die Actions-Automatisierung synchronisiert den Project-Status, wenn sie eingerichtet ist.
 - Prüfe vor Änderungen den Git-Status und relevante Repository-Anweisungen. Bewahre bestehende Nutzeränderungen; überschreibe oder verwerfe sie nicht.
 - Starte jede eigenständige Aufgabe auf einem eigenen Branch vom aktuellen `origin/main`. Aktualisiere dafür die Remote-Referenz. Prüfe bei laufenden Arbeiten, bevor du den Branch wechselst. Arbeite nicht direkt auf `main`.
 - Verwende den bestehenden Checkout. Cloud-Aufgaben sind bereits isoliert; erstelle keinen Git-Worktree, sofern der Nutzer ihn nicht ausdrücklich verlangt.
@@ -58,7 +60,9 @@ Wir verfolgen Aufgaben über Issues, nicht über zusätzliche PR-Karten:
 - **Backlog:** Ideen und spätere Aufgaben.
 - **Ready:** Beschreibung und Akzeptanzkriterien sind klar.
 - **In Progress:** Die Umsetzung läuft auf einem Branch.
-- **In Review:** Der Pull Request ist offen und bereit für Tests, Vorschau und Review.
+- **In Review:** Der Pull Request ist offen und die erforderlichen automatisierten Tests für seinen aktuellen Stand sind erfolgreich. Erst dann ist er bereit für das menschliche Review.
 - **Done:** Die Änderung ist gemergt und auf der veröffentlichten Seite geprüft.
+
+Die Automatisierung setzt Ready und In Progress anhand der Issue-Labels und In Review nach erfolgreichen Browser tests. Neue PR-Änderungen gehen während der erneuten Prüfung zurück nach In Progress. GitHub Actions benötigt dafür PROJECT_NUMBER und PROJECTS_TOKEN (siehe README). Direkter Project-Zugriff aus Codex ist dafür nicht erforderlich. Prüfe den Actions-Lauf, bevor du einen erfolgreichen Statuswechsel behauptest. Done bleibt nach dem Smoke-Test manuell.
 
 Aktualisiere den Status, wenn die Project-Berechtigungen dies erlauben. Wenn der Zugriff scheitert, berichte das konkret und bitte den Nutzer um die Änderung; behaupte keinen erfolgreichen Statuswechsel. Das automatische Schließen eines Issues durch `Closes` bestätigt den Merge, aber noch nicht den Smoke-Test oder den Board-Status.
