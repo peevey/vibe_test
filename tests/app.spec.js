@@ -2,6 +2,34 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => { await page.goto('/index.html'); });
 
+test('Smiley steht über der Überschrift und dreht sich dauerhaft', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  await expect(smiley).toBeVisible();
+  const smileyBox = await smiley.boundingBox();
+  const headingBox = await page.getByRole('heading', { level: 1 }).boundingBox();
+  expect(smileyBox.y + smileyBox.height).toBeLessThan(headingBox.y);
+  await smiley.evaluate(el => {
+    const animation = el.getAnimations()[0];
+    animation.pause();
+    animation.currentTime = 0;
+  });
+  const initial = await smiley.evaluate(el => getComputedStyle(el).transform);
+  await smiley.evaluate(el => { el.getAnimations()[0].currentTime = 1500; });
+  expect(await smiley.evaluate(el => getComputedStyle(el).transform)).not.toBe(initial);
+  const timing = await smiley.evaluate(el => el.getAnimations()[0].effect.getTiming());
+  expect(timing.duration).toBe(6000);
+  expect(timing.iterations).toBe(Infinity);
+});
+
+test('Smiley bleibt bei reduzierter Bewegung still', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  await expect(smiley).toBeVisible();
+  await expect(smiley).toHaveCSS('animation-name', 'none');
+  await expect(smiley).toHaveCSS('transform', 'none');
+});
+
 test('Begrüßung berücksichtigt Namen und leere Eingaben', async ({ page }) => {
   await page.getByLabel('Wie heißt du?').fill(' Ada ');
   await expect(page.locator('#greeting')).toHaveText('Hallo, Ada! Schön, dass du da bist.');
