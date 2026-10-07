@@ -204,3 +204,31 @@ test('Smiley reagiert auf Änderungen der Bewegungseinstellung', async ({ page }
   await page.clock.runFor(3000);
   await expect(smiley).toHaveText('😄');
 });
+
+test('Hauptüberschrift ist verspielt, mit Farbverlauf und unverändertem Text', async ({ page }) => {
+  const heading = page.getByRole('heading', { level: 1 });
+  await expect(heading).toBeVisible();
+  await expect(heading).toHaveText('Hier wird experimentiert!');
+  await expect(heading).toHaveCSS('font-family', '"Comic Sans MS", "Comic Sans", cursive');
+  await expect(heading).toHaveCSS('background-image', 'linear-gradient(90deg, rgb(124, 58, 237), rgb(190, 24, 93))');
+  await expect(heading).toHaveCSS('background-clip', 'text');
+  const bodyFont = await page.locator('body').evaluate(el => getComputedStyle(el).fontFamily);
+  expect(bodyFont).not.toContain('Comic Sans');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('Überschrift hat ohne Verlaufstext-Unterstützung eine sichtbare violette Ersatzfarbe', async ({ page }) => {
+  // Simuliere einen Browser, der den @supports-Block nicht anwendet.
+  await page.evaluate(() => {
+    for (const sheet of document.styleSheets) {
+      for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+        const rule = sheet.cssRules[i];
+        if (rule instanceof CSSSupportsRule && rule.conditionText.includes('background-clip')) sheet.deleteRule(i);
+      }
+    }
+  });
+  const heading = page.getByRole('heading', { level: 1 });
+  await expect(heading).toBeVisible();
+  await expect(heading).toHaveCSS('color', 'rgb(124, 58, 237)');
+  await expect(heading).toHaveCSS('background-image', 'none');
+});
