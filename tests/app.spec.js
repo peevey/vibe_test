@@ -77,7 +77,7 @@ test('Dauerhaftes Weltall-Design ersetzt den Farbwechsel', async ({ page }) => {
   await expect(page.locator('.space-scene')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.locator('.space-scene')).toHaveCSS('pointer-events', 'none');
   await expect(page.locator('.starfield')).toBeVisible();
-  await expect(page.locator('.space-object')).toHaveCount(6);
+  await expect(page.locator('.space-object')).toHaveCount(5);
   for (const object of await page.locator('.space-object').all()) await expect(object).toBeVisible();
   await page.getByRole('button', { name: '+1 Klick', exact: true }).focus();
   await expect(page.locator('#increment')).toHaveCSS('outline-color', 'rgb(253, 230, 138)');
@@ -86,7 +86,7 @@ test('Dauerhaftes Weltall-Design ersetzt den Farbwechsel', async ({ page }) => {
 test('Weltall bewegt sich auf unterschiedlichen Bahnen und reagiert auf reduzierte Bewegung', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   const motion = await page.locator('.space-scene').evaluate(scene => {
-    const animations = scene.getAnimations({ subtree: true });
+    const animations = scene.getAnimations({ subtree: true }).filter(animation => !animation.effect.target.matches('.chase-flier'));
     const samples = animations.map(animation => {
       animation.pause();
       animation.currentTime = 0;
@@ -98,9 +98,9 @@ test('Weltall bewegt sich auf unterschiedlichen Bahnen und reagiert auf reduzier
     animations.forEach(animation => animation.play());
     return samples;
   });
-  expect(motion).toHaveLength(7);
+  expect(motion).toHaveLength(6);
   expect(motion.every(sample => sample.before !== sample.after)).toBe(true);
-  expect(new Set(motion.map(sample => sample.duration)).size).toBe(7);
+  expect(new Set(motion.map(sample => sample.duration)).size).toBe(6);
   expect(new Set(motion.map(sample => sample.name)).size).toBe(3);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const item of await page.locator('.space-object, .starfield').all()) {
@@ -322,6 +322,8 @@ test('Eingebetteter Sternenhimmel lädt auch in der Vorschau ohne weitere Ressou
   await page.route('**/previews/pr-48/', route => route.fulfill({ body: html, contentType: 'text/html' }));
   for (const url of ['/index.html', '/previews/pr-48/']) {
     await page.goto(url);
+    await expect(page.locator('.chase-dinosaur svg')).toBeVisible();
+    await expect(page.locator('.chase-rocket')).toHaveText('🚀');
     const image = await page.locator('.starfield').evaluate(async element => {
       const style = getComputedStyle(element);
       const source = style.backgroundImage.slice(5, -2);
