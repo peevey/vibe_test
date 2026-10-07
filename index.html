@@ -39,6 +39,7 @@
       <output id="counter" aria-live="polite">0</output>
       <div class="buttons">
         <button id="increment" type="button">+1 Klick</button>
+        <button id="decrement" class="secondary" type="button">−1 Klick</button>
         <button id="reset" class="secondary" type="button">Zurücksetzen</button>
         <button id="color" class="secondary" type="button">Farbe wechseln</button>
       </div>
@@ -59,6 +60,9 @@
     });
     document.querySelector('#increment').addEventListener('click', () => {
       counter.textContent = String(++clicks);
+    });
+    document.querySelector('#decrement').addEventListener('click', () => {
+      counter.textContent = String(--clicks);
     });
     document.querySelector('#reset').addEventListener('click', () => {
       clicks = 0;

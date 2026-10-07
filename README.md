@@ -15,6 +15,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 - Einen Namen eingeben: Die Begrüßung passt sich an.
 - Auf „+1 Klick“ klicken: Der Zähler steigt.
+- Auf „−1 Klick“ klicken: Der Zähler sinkt, auch unter null.
 - „Zurücksetzen“ setzt den Zähler auf null.
 - „Farbe wechseln“ wechselt die Hintergrundfarbe.
 
