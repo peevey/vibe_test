@@ -195,14 +195,18 @@ test('Smiley reagiert auf Änderungen der Bewegungseinstellung', async ({ page }
   const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
   await page.clock.runFor(3000);
   await expect(smiley).toHaveText('😄');
+  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😁');
   await changeMotionPreference('reduce');
   await expect(smiley).toHaveText('🙂');
+  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😀');
   await page.clock.runFor(30000);
   await expect(smiley).toHaveText('🙂');
+  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😀');
   await changeMotionPreference('no-preference');
   await expect(smiley).toHaveCSS('animation-name', 'none');
   await page.clock.runFor(3000);
   await expect(smiley).toHaveText('😄');
+  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😁');
 });
 
 test('Hauptüberschrift ist verspielt, mit Farbverlauf und unverändertem Text', async ({ page }) => {
@@ -231,4 +235,52 @@ test('Überschrift hat ohne Verlaufstext-Unterstützung eine sichtbare violette 
   await expect(heading).toBeVisible();
   await expect(heading).toHaveCSS('color', 'rgb(124, 58, 237)');
   await expect(heading).toHaveCSS('background-image', 'none');
+});
+
+test('Zweiter Smiley steht gleich groß rechts daneben, auch bei schmaler Smartphone-Breite', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  const first = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  const second = page.getByRole('img', { name: 'Zweiter Smiley' });
+  await expect(second).toBeVisible();
+  await expect(second).toHaveCSS('font-size', '96px');
+  await expect(second).toHaveCSS('animation-name', 'none');
+  const a = await first.boundingBox(), b = await second.boundingBox();
+  expect(b.x).toBeGreaterThanOrEqual(a.x + a.width);
+  expect(b.y).toBe(a.y);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('Beide Smileys wechseln im vollständigen Zyklus um 1,5 Sekunden versetzt', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
+  await page.reload();
+  const first = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  const second = page.getByRole('img', { name: 'Zweiter Smiley' });
+  await expect(first).toHaveText('🙂');
+  await expect(second).toHaveText('😀');
+  await page.clock.runFor(1499);
+  await expect(first).toHaveText('🙂');
+  await expect(second).toHaveText('😀');
+  await page.clock.runFor(1);
+  await expect(first).toHaveText('🙂');
+  await expect(second).toHaveText('😁');
+  for (const [a, b] of [
+    ['😄', '😁'], ['😄', '😆'], ['😎', '😆'], ['😎', '🥳'],
+    ['🤩', '🥳'], ['🤩', '😇'], ['😊', '😇'], ['😊', '😀'], ['🙂', '😀']
+  ]) {
+    await page.clock.runFor(1500);
+    await expect(first).toHaveText(a);
+    await expect(second).toHaveText(b);
+  }
+});
+
+test('Beide Smileys bleiben bei reduzierter Bewegung auf ihren Startgesichtern', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
+  await page.reload();
+  await page.clock.runFor(60000);
+  await expect(page.getByRole('img', { name: 'Lächelnder Smiley' })).toHaveText('🙂');
+  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😀');
 });
