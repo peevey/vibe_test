@@ -2,9 +2,9 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => { await page.goto('/index.html'); });
 
-test('Smiley steht über der Überschrift und dreht sich nicht', async ({ page }) => {
+test('Weltall-Symbol steht über der Überschrift und dreht sich nicht', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  const smiley = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
   await expect(smiley).toBeVisible();
   await expect(smiley).toHaveCSS('font-size', '96px');
   const smileyBox = await smiley.boundingBox();
@@ -14,9 +14,9 @@ test('Smiley steht über der Überschrift und dreht sich nicht', async ({ page }
   await expect(smiley).toHaveCSS('transform', 'none');
 });
 
-test('Smiley bleibt bei reduzierter Bewegung still', async ({ page }) => {
+test('Weltall-Symbol bleibt bei reduzierter Bewegung still', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  const smiley = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
   await expect(smiley).toBeVisible();
   await expect(smiley).toHaveCSS('animation-name', 'none');
   await expect(smiley).toHaveCSS('transform', 'none');
@@ -68,20 +68,47 @@ test('Neue Botschaften wiederholen sich nicht direkt', async ({ page }) => {
   await expect(page.locator('#greeting')).toContainText('Hallo!');
 });
 
-test('Hintergrundfarbe wechselt und kehrt nach vier Klicks zurück', async ({ page }) => {
-  const card = page.getByRole('main');
-  await expect(card).toHaveCSS('background-color', 'rgb(232, 245, 238)');
-  const background = () => page.locator('html').evaluate(el => getComputedStyle(el).backgroundColor);
-  const initial = await background();
-  expect(initial).toBe('rgb(241, 243, 250)');
-  await page.getByRole('button', { name: 'Farbe wechseln' }).click();
-  expect(await background()).not.toBe(initial);
-  await expect(card).toHaveCSS('background-color', 'rgb(232, 245, 238)');
-  for (let i = 0; i < 3; i++) {
-    await page.getByRole('button', { name: 'Farbe wechseln' }).click();
-    await expect(card).toHaveCSS('background-color', 'rgb(232, 245, 238)');
+test('Dauerhaftes Weltall-Design ersetzt den Farbwechsel', async ({ page }) => {
+  await expect(page.locator('html')).toHaveCSS('background-color', 'rgb(7, 11, 26)');
+  await expect(page.getByRole('main')).toHaveCSS('background-color', 'rgb(18, 27, 54)');
+  await expect(page.getByRole('main')).toHaveCSS('color', 'rgb(238, 243, 255)');
+  await expect(page.getByLabel('Wie heißt du?')).toHaveCSS('background-color', 'rgb(11, 19, 40)');
+  await expect(page.getByRole('button', { name: 'Farbe wechseln' })).toHaveCount(0);
+  await expect(page.locator('.space-scene')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.space-scene')).toHaveCSS('pointer-events', 'none');
+  await expect(page.locator('.starfield')).toBeVisible();
+  await expect(page.locator('.space-object')).toHaveCount(6);
+  for (const object of await page.locator('.space-object').all()) await expect(object).toBeVisible();
+  await page.getByRole('button', { name: '+1 Klick', exact: true }).focus();
+  await expect(page.locator('#increment')).toHaveCSS('outline-color', 'rgb(253, 230, 138)');
+});
+
+test('Weltall bewegt sich auf unterschiedlichen Bahnen und reagiert auf reduzierte Bewegung', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const motion = await page.locator('.space-scene').evaluate(scene => {
+    const animations = scene.getAnimations({ subtree: true });
+    const samples = animations.map(animation => {
+      animation.pause();
+      animation.currentTime = 0;
+      const before = getComputedStyle(animation.effect.target).transform;
+      animation.currentTime = 2000;
+      return { before, after: getComputedStyle(animation.effect.target).transform,
+        duration: animation.effect.getTiming().duration, name: animation.animationName };
+    });
+    animations.forEach(animation => animation.play());
+    return samples;
+  });
+  expect(motion).toHaveLength(7);
+  expect(motion.every(sample => sample.before !== sample.after)).toBe(true);
+  expect(new Set(motion.map(sample => sample.duration)).size).toBe(7);
+  expect(new Set(motion.map(sample => sample.name)).size).toBe(3);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const item of await page.locator('.space-object, .starfield').all()) {
+    await expect(item).toHaveCSS('animation-name', 'none');
+    await expect(item).toHaveCSS('transform', 'none');
   }
-  expect(await background()).toBe(initial);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(page.locator('.starfield')).toHaveCSS('animation-name', 'star-drift');
 });
 
 test('Layout passt ohne horizontalen Überlauf und Buttons sind per Tastatur bedienbar', async ({ page }) => {
@@ -148,35 +175,35 @@ test('Hauptseite und PR-Vorschau speichern getrennte Zählerstände', async ({ p
   await expect(page.locator('#counter')).toHaveText('1');
 });
 
-test('Smiley wechselt genau nach drei Sekunden durch alle fünf Gesichter', async ({ page }) => {
+test('Weltall-Symbol wechselt genau nach drei Sekunden durch alle fünf Symbole', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
-  const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
-  await expect(smiley).toHaveText('🙂');
+  const smiley = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
+  await expect(smiley).toHaveText('🚀');
   await page.clock.runFor(2999);
-  await expect(smiley).toHaveText('🙂');
+  await expect(smiley).toHaveText('🚀');
   await page.clock.runFor(1);
-  await expect(smiley).toHaveText('😄');
-  for (const face of ['😎', '🤩', '😊', '🙂']) {
+  await expect(smiley).toHaveText('🪐');
+  for (const face of ['⭐', '🌙', '🛸', '🚀']) {
     await page.clock.runFor(3000);
     await expect(smiley).toHaveText(face);
   }
 });
 
-test('Reduzierte Bewegung verhindert auch den automatischen Smiley-Wechsel', async ({ page }) => {
+test('Reduzierte Bewegung verhindert auch den automatischen Weltall-Symbol-Wechsel', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
-  const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  const smiley = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
   await page.clock.runFor(60000);
-  await expect(smiley).toHaveText('🙂');
+  await expect(smiley).toHaveText('🚀');
   await expect(smiley).toHaveCSS('animation-name', 'none');
 });
 
-test('Smiley reagiert auf Änderungen der Bewegungseinstellung', async ({ page }) => {
+test('Weltall-Symbol reagiert auf Änderungen der Bewegungseinstellung', async ({ page }) => {
   async function changeMotionPreference(reducedMotion) {
     // CSS und das JavaScript-change-Ereignis werden nicht zwingend gleichzeitig aktualisiert.
     await page.evaluate(() => {
@@ -192,21 +219,21 @@ test('Smiley reagiert auf Änderungen der Bewegungseinstellung', async ({ page }
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
-  const smiley = page.getByRole('img', { name: 'Lächelnder Smiley' });
+  const smiley = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
   await page.clock.runFor(3000);
-  await expect(smiley).toHaveText('😄');
-  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😁');
+  await expect(smiley).toHaveText('🪐');
+  await expect(page.getByRole('img', { name: 'Zweites Weltall-Symbol' })).toHaveText('☄️');
   await changeMotionPreference('reduce');
-  await expect(smiley).toHaveText('🙂');
-  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😀');
+  await expect(smiley).toHaveText('🚀');
+  await expect(page.getByRole('img', { name: 'Zweites Weltall-Symbol' })).toHaveText('🌍');
   await page.clock.runFor(30000);
-  await expect(smiley).toHaveText('🙂');
-  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😀');
+  await expect(smiley).toHaveText('🚀');
+  await expect(page.getByRole('img', { name: 'Zweites Weltall-Symbol' })).toHaveText('🌍');
   await changeMotionPreference('no-preference');
   await expect(smiley).toHaveCSS('animation-name', 'none');
   await page.clock.runFor(3000);
-  await expect(smiley).toHaveText('😄');
-  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😁');
+  await expect(smiley).toHaveText('🪐');
+  await expect(page.getByRole('img', { name: 'Zweites Weltall-Symbol' })).toHaveText('☄️');
 });
 
 test('Hauptüberschrift ist verspielt, mit Farbverlauf und unverändertem Text', async ({ page }) => {
@@ -214,7 +241,7 @@ test('Hauptüberschrift ist verspielt, mit Farbverlauf und unverändertem Text',
   await expect(heading).toBeVisible();
   await expect(heading).toHaveText('Hier wird experimentiert!');
   await expect(heading).toHaveCSS('font-family', '"Comic Sans MS", "Comic Sans", cursive');
-  await expect(heading).toHaveCSS('background-image', 'linear-gradient(90deg, rgb(124, 58, 237), rgb(190, 24, 93))');
+  await expect(heading).toHaveCSS('background-image', 'linear-gradient(90deg, rgb(196, 181, 253), rgb(249, 168, 212))');
   await expect(heading).toHaveCSS('background-clip', 'text');
   const bodyFont = await page.locator('body').evaluate(el => getComputedStyle(el).fontFamily);
   expect(bodyFont).not.toContain('Comic Sans');
@@ -233,14 +260,14 @@ test('Überschrift hat ohne Verlaufstext-Unterstützung eine sichtbare violette 
   });
   const heading = page.getByRole('heading', { level: 1 });
   await expect(heading).toBeVisible();
-  await expect(heading).toHaveCSS('color', 'rgb(124, 58, 237)');
+  await expect(heading).toHaveCSS('color', 'rgb(196, 181, 253)');
   await expect(heading).toHaveCSS('background-image', 'none');
 });
 
-test('Zweiter Smiley steht gleich groß rechts daneben, auch bei schmaler Smartphone-Breite', async ({ page }) => {
+test('Zweites Weltall-Symbol steht gleich groß rechts daneben, auch bei schmaler Smartphone-Breite', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
-  const first = page.getByRole('img', { name: 'Lächelnder Smiley' });
-  const second = page.getByRole('img', { name: 'Zweiter Smiley' });
+  const first = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
+  const second = page.getByRole('img', { name: 'Zweites Weltall-Symbol' });
   await expect(second).toBeVisible();
   await expect(second).toHaveCSS('font-size', '96px');
   await expect(second).toHaveCSS('animation-name', 'none');
@@ -250,24 +277,24 @@ test('Zweiter Smiley steht gleich groß rechts daneben, auch bei schmaler Smartp
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('Beide Smileys wechseln im vollständigen Zyklus um 1,5 Sekunden versetzt', async ({ page }) => {
+test('Beide Weltall-Symbole wechseln im vollständigen Zyklus um 1,5 Sekunden versetzt', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
-  const first = page.getByRole('img', { name: 'Lächelnder Smiley' });
-  const second = page.getByRole('img', { name: 'Zweiter Smiley' });
-  await expect(first).toHaveText('🙂');
-  await expect(second).toHaveText('😀');
+  const first = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
+  const second = page.getByRole('img', { name: 'Zweites Weltall-Symbol' });
+  await expect(first).toHaveText('🚀');
+  await expect(second).toHaveText('🌍');
   await page.clock.runFor(1499);
-  await expect(first).toHaveText('🙂');
-  await expect(second).toHaveText('😀');
+  await expect(first).toHaveText('🚀');
+  await expect(second).toHaveText('🌍');
   await page.clock.runFor(1);
-  await expect(first).toHaveText('🙂');
-  await expect(second).toHaveText('😁');
+  await expect(first).toHaveText('🚀');
+  await expect(second).toHaveText('☄️');
   for (const [a, b] of [
-    ['😄', '😁'], ['😄', '😆'], ['😎', '😆'], ['😎', '🥳'],
-    ['🤩', '🥳'], ['🤩', '😇'], ['😊', '😇'], ['😊', '😀'], ['🙂', '😀']
+    ['🪐', '☄️'], ['🪐', '🌟'], ['⭐', '🌟'], ['⭐', '🌌'],
+    ['🌙', '🌌'], ['🌙', '👽'], ['🛸', '👽'], ['🛸', '🌍'], ['🚀', '🌍']
   ]) {
     await page.clock.runFor(1500);
     await expect(first).toHaveText(a);
@@ -275,12 +302,12 @@ test('Beide Smileys wechseln im vollständigen Zyklus um 1,5 Sekunden versetzt',
   }
 });
 
-test('Beide Smileys bleiben bei reduzierter Bewegung auf ihren Startgesichtern', async ({ page }) => {
+test('Beide Weltall-Symbole bleiben bei reduzierter Bewegung auf ihren Startsymbolen', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
   await page.clock.runFor(60000);
-  await expect(page.getByRole('img', { name: 'Lächelnder Smiley' })).toHaveText('🙂');
-  await expect(page.getByRole('img', { name: 'Zweiter Smiley' })).toHaveText('😀');
+  await expect(page.getByRole('img', { name: 'Erstes Weltall-Symbol' })).toHaveText('🚀');
+  await expect(page.getByRole('img', { name: 'Zweites Weltall-Symbol' })).toHaveText('🌍');
 });
