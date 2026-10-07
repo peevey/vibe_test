@@ -34,7 +34,10 @@ Setze nur den beauftragten Schritt um und halte Änderungen überschaubar.
   Force-Push ohne ausdrücklichen Auftrag aus.
 - Der Nutzer prüft und mergt. Merge einen PR nur auf ausdrücklichen Auftrag.
   Unsere vereinbarte Methode ist **Create a merge commit**, damit einzelne
-  Commits erhalten bleiben. GitHub erlaubt derzeit auch andere Methoden.
+  Commits erhalten bleiben. Die Repository-Einstellungen sollen dafür
+  **Allow merge commits** aktivieren und Squash sowie Rebase deaktivieren.
+  Prüfe die tatsächlichen Einstellungen, bevor du ihre Einrichtung als
+  abgeschlossen meldest; Dokumentationsänderungen wenden sie nicht an.
 - Rücknahmen erfolgen als `git revert` auf einem neuen Branch mit Prüfung und
   PR. Bereits veröffentlichte Historie wird nicht umgeschrieben.
 

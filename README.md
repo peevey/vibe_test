@@ -71,7 +71,14 @@ Unter **Settings → Rules → Rulesets** eine Branch-Regel für `main` anlegen 
 
 Für ein Solo-Projekt sind verpflichtende Fremdfreigaben nicht nötig. Je nach GitHub-Tarif und Repository-Sichtbarkeit können Branch-Regeln eingeschränkt sein.
 
-Unter **Settings → General → Pull Requests** „Allow merge commits“ aktivieren. Optional Squash-Merges deaktivieren, damit einzelne Änderungen erhalten bleiben.
+Für unseren vereinbarten Ablauf unter **Settings → General → Pull Requests**:
+
+- **Allow merge commits** aktivieren.
+- **Allow squash merging** deaktivieren.
+- **Allow rebase merging** deaktivieren.
+- **Automatically delete head branches** aktivieren, damit gemergte Aufgabenbranches automatisch aufgeräumt werden.
+
+Damit bietet GitHub nur **Create a merge commit** an und die einzelnen Commits bleiben erhalten. Die Branch-Schutzregeln und erforderlichen Tests gelten weiterhin. Diese Optionen sind GitHub-Einstellungen: Ein Dokumentations-PR ändert sie nicht. Ihre tatsächlichen Werte müssen nach der Einrichtung geprüft werden.
 
 ### Eine Änderung zurücknehmen
 
