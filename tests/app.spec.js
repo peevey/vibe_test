@@ -77,7 +77,7 @@ test('Dauerhaftes Weltall-Design ersetzt den Farbwechsel', async ({ page }) => {
   await expect(page.locator('.space-scene')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.locator('.space-scene')).toHaveCSS('pointer-events', 'none');
   await expect(page.locator('.starfield')).toBeVisible();
-  await expect(page.locator('.space-object')).toHaveCount(5);
+  await expect(page.locator('.space-object')).toHaveCount(9);
   for (const object of await page.locator('.space-object').all()) await expect(object).toBeVisible();
   await page.getByRole('button', { name: '+1 Klick', exact: true }).focus();
   await expect(page.locator('#increment')).toHaveCSS('outline-color', 'rgb(253, 230, 138)');
@@ -98,10 +98,10 @@ test('Weltall bewegt sich auf unterschiedlichen Bahnen und reagiert auf reduzier
     animations.forEach(animation => animation.play());
     return samples;
   });
-  expect(motion).toHaveLength(6);
+  expect(motion).toHaveLength(10);
   expect(motion.every(sample => sample.before !== sample.after)).toBe(true);
-  expect(new Set(motion.map(sample => sample.duration)).size).toBe(6);
-  expect(new Set(motion.map(sample => sample.name)).size).toBe(3);
+  expect(new Set(motion.map(sample => sample.duration)).size).toBe(10);
+  expect(new Set(motion.map(sample => sample.name)).size).toBe(test.info().project.name === 'mobile' ? 4 : 3);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const item of await page.locator('.space-object, .starfield').all()) {
     await expect(item).toHaveCSS('animation-name', 'none');
