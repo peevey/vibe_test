@@ -25,7 +25,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - „Zurücksetzen“ setzt den Zähler auf null und deaktiviert den Minus-Button.
 - Der Zählerstand bleibt beim Neuladen im selben Browser erhalten. Hauptseite und jede PR-Vorschau speichern getrennte Werte. Nach dem Löschen der Website-Daten startet er wieder bei null.
 - Falls Browserspeicherung gesperrt ist, bleibt der Zähler bedienbar, wird aber nicht dauerhaft gespeichert.
-- Ein freundlicher grüner Cartoon-T-Rex verfolgt die Hintergrundrakete auf einer geschlossenen Flugbahn. Ein Zyklus dauert 17 Sekunden; der Dinosaurier folgt mit einem Viertelzyklus Abstand und richtet sich wie die Rakete in Flugrichtung aus. Auf großen Bildschirmen liegt die Bahn links neben der Karte, auf Smartphones oberhalb. Beim Scrollen nutzt sie dort den freieren oberen oder unteren Rand. Bei reduzierter Bewegung stehen beide in einer ruhenden Verfolgungspose.
+- Rakete, UFO und beide Hintergrundplaneten schließen sich bei Mausannäherung einer Reihe entlang der Mausspur an. Fangradius: 100 CSS-Pixel; Abstand: 64 CSS-Pixel, in engen Kurven bei Bedarf größer, damit sich die Objekte nicht dauerhaft überlagern. Schnelles Wegziehen (mindestens 900 CSS-Pixel/s für 80 ms bei wachsendem Abstand zur Spitze) löst die ganze Reihe. Die Objekte kehren in etwa 800 ms weich auf ihre laufenden Bahnen zurück. Maus-Austritt und Fokusverlust lösen ebenfalls die Rückkehr aus. Touch-Eingaben sammeln keine Objekte; bei reduzierter Bewegung ist die Szene statisch. Der Dinosaurier wurde entfernt.
 - Das dauerhafte Weltall-Design zeigt einen dunklen Sternenhimmel mit langsam bewegten Raumschiffen, Planeten und Sternen hinter der dunkelblauen Karte. Der Farbwechsel-Button entfällt. Bei reduzierter Bewegung bleibt auch die Hintergrundszene still.
 
 Alles steckt in `index.html`, einschließlich des Sternenhimmelbildes. Änderungen werden nach dem Neuladen sichtbar.
@@ -52,22 +52,6 @@ Zum Reproduzieren: Pillow 12.3.0 in einer Python-Umgebung installieren und
 `python scripts/generate-starfield.py` ausführen. Der feste Zufallsstartwert 48
 liefert dieselbe Verteilung; Python/Pillow werden nur zur Bildherstellung benötigt,
 nicht zur Laufzeit oder beim Pages-Build.
-
-### Dinosauriergrafik: Herkunft und Rechte
-
-Der kleine grüne T-Rex wurde für Ticket #50 als eigene SVG-Grafik erstellt;
-er enthält keine fremden Bildbestandteile und wird unter **CC0 1.0** bereitgestellt
-(https://creativecommons.org/publicdomain/zero/1.0/). Nutzung, Änderung und
-Weitergabe sind ohne Namensnennung erlaubt. Die Grafik steht direkt in
-`index.html`; Hauptseite und PR-Vorschau benötigen keine zusätzliche Bilddatei
-oder externe Grafikdienste. Die vorhandene Rakete bleibt das 🚀-Emoji; dessen
-Darstellung stammt wie bisher aus der jeweiligen Systemschrift.
-
-Die Jagd nutzt CSS Motion Paths (`ellipse`, `offset-distance`, `offset-rotate`)
-mit identischer Bahn und Dauer für beide Figuren. Eine geschlossene Bahn
-vermeidet Rücksprünge; der feste Phasenabstand verhindert Überholen.
-Die übrigen Hintergrundobjekte behalten ihre bisherigen Bahnen.
-Die dekorative Szene bleibt für Eingaben und assistive Technologien ausgeblendet.
 
 ## Automatisierte Browsertests
 

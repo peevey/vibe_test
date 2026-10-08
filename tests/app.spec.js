@@ -322,7 +322,7 @@ test('Eingebetteter Sternenhimmel lädt auch in der Vorschau ohne weitere Ressou
   await page.route('**/previews/pr-48/', route => route.fulfill({ body: html, contentType: 'text/html' }));
   for (const url of ['/index.html', '/previews/pr-48/']) {
     await page.goto(url);
-    await expect(page.locator('.chase-dinosaur svg')).toBeVisible();
+    await expect(page.locator('.chase-dinosaur')).toHaveCount(0);
     await expect(page.locator('.chase-rocket')).toHaveText('🚀');
     const image = await page.locator('.starfield').evaluate(async element => {
       const style = getComputedStyle(element);
