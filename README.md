@@ -76,7 +76,7 @@ GitHub Actions verwendet den zu Playwright passenden Browser; die Cloud-Prüfung
 
 ## Gemeinsamer Entwicklungsablauf
 
-1. Gewünschtes Verhalten und Grenzfälle beschreiben.
+1. Das Ticket vollständig im Chat besprechen: Titel, Ziel, gewünschtes Verhalten, Akzeptanzkriterien und Abgrenzung. Nach Änderungen die vollständige Fassung erneut zeigen. Erst nach ausdrücklicher Freigabe genau diesen Text ins Issue übernehmen und anschließend Ready setzen. Die Umsetzung separat beauftragen.
 2. Einen Branch vom aktuellen `main` erstellen; bestehende lokale Änderungen zuvor sichern.
 3. Änderung umsetzen, passende Tests ergänzen und `npm test` ausführen.
 4. Darstellung bei Desktop- und Smartphone-Breite visuell prüfen.
@@ -137,15 +137,24 @@ Der Builder wird mit `npm run test:pages` getestet. Diese Tests prüfen die Ausw
 
 Refinement und Umsetzung sind getrennte Schritte. Eine Zustimmung zur Aufgabenbeschreibung startet keine Implementierung.
 
+Codex zeigt vor einer Aktualisierung in GitHub den vollständigen vorgeschlagenen
+Issue-Text im Chat: Titel, Ziel, gewünschtes Verhalten, Akzeptanzkriterien und
+Abgrenzung. Wir klären offene Fragen und besprechen diesen Text gemeinsam.
+Nach Änderungen wird die vollständige überarbeitete Fassung erneut gezeigt.
+Erst nach ausdrücklicher Freigabe übernimmt Codex genau diese Fassung ins Issue
+und setzt es anschließend auf **Ready**. Ohne Freigabe bleiben Issue-Text und
+Ready-Status unverändert. Beim Übertragen werden keine zusätzlichen Anforderungen
+ergänzt. Die Umsetzung benötigt einen separaten Auftrag.
+
 | Auslöser | Board-Status |
 |---|---|
-| Akzeptanzkriterien abgestimmt; Label `workflow:ready` | Ready |
+| Vollständiger Issue-Text im Chat freigegeben und in GitHub übernommen; Label `workflow:ready` | Ready |
 | Separater ausdrücklicher Umsetzungsauftrag; Label `workflow:in-progress` | In Progress |
 | Aktueller, offener PR nach main besteht den Workflow Browser tests | In Review |
 | Neue PR-Änderung oder fehlgeschlagene Tests | In Progress |
 | Merge, Veröffentlichung und bestätigter Smoke-Test | Done, weiterhin manuell |
 
-Codex setzt nach Refinement das Ready-Label. Beim separaten Umsetzungsauftrag ersetzt es dieses durch das In-Progress-Label. Nur das Hinzufügen dieser beiden Labels startet die labelbasierte Status-Synchronisierung, keine Implementierung. Entfernen und andere Labels ändern den Board-Status nicht. Bereits entfernte Labels werden auch bei verspäteten Ereignissen ignoriert.
+Codex setzt erst nach ausdrücklicher Freigabe der vollständigen Fassung und deren Übernahme ins Issue das Ready-Label. Beim separaten Umsetzungsauftrag ersetzt es dieses durch das In-Progress-Label. Nur das Hinzufügen dieser beiden Labels startet die labelbasierte Status-Synchronisierung, keine Implementierung. Entfernen und andere Labels ändern den Board-Status nicht. Bereits entfernte Labels werden auch bei verspäteten Ereignissen ignoriert.
 
 Die Labels kennzeichnen den beauftragten Arbeitsschritt; sie spiegeln nicht jeden späteren Board-Status. Der PR verknüpft das Issue über `Closes #<Nummer>`. Sobald ein passender offener PR vorhanden ist, hat sein aktueller Teststand Vorrang vor den Labels: erfolgreiche Tests bedeuten In Review, ausstehende oder fehlgeschlagene Tests In Progress. So setzt ein verspätetes Ready- oder In-Progress-Ereignis einen bereits grünen PR nicht zurück. Ein Entwurf bleibt bei Label-Ereignissen In Progress; PR- und Test-Ereignisse stufen Entwürfe nicht zur Prüfung hoch. Fork-PRs, geschlossene Issues und Testläufe für einen inzwischen veralteten PR-Stand werden nicht nach In Review gesetzt. Ein ausdrücklich angeforderter manueller Statuswechsel per Run workflow bleibt möglich.
 
