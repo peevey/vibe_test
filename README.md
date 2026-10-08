@@ -63,7 +63,36 @@ npx playwright install --with-deps chromium
 npm test
 ```
 
-Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Sie prüfen die Abläufe jeweils bei Desktop- und Smartphone-Breite. Dazu gehören die Weltall-Darstellung und die Einstellung für reduzierte Bewegung. Das prüft Funktionen und horizontalen Überlauf; das Aussehen sollte zusätzlich visuell geprüft werden. Ein HTML-Bericht liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
+Die Tests starten und stoppen ihren eigenen Webserver auf Port 8765. Geräteabhängige
+Darstellung, reduzierte Bewegung und Eingaben werden im Desktop- und im
+Smartphone-Projekt geprüft. Tests mit dem Tag `@once` laufen nur im Desktop-Projekt:
+sie prüfen gemeinsame Funktionslogik oder setzen ihre Bildschirmgrößen selbst.
+Die Sichtbarkeit der neuen Motive bei 1280, 390 und 320 Pixel Breite wird dadurch
+jeweils einmal geprüft. Neue Tests laufen ohne diesen Tag weiterhin in beiden
+Projekten. Die Zuordnung und der Laufzeitvergleich stehen in
+[docs/issue-58/README.md](docs/issue-58/README.md).
+
+Während der Entwicklung können betroffene Tests gezielt ausgeführt werden:
+
+```sh
+# Hintergrundobjekte und Mausinteraktion
+npm test -- tests/chase.spec.js
+# Zähler und Speicherung: gemeinsame Logik einmal
+npm test -- --project=desktop --grep 'Zähler|speichern'
+# Geräteabhängige Prüfungen auf Smartphone
+npm test -- --project=mobile
+# Auswahl ohne Ausführung kontrollieren
+npm test -- --list
+```
+
+In der Cloud diese Befehle mit `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium`
+ausführen. Vor dem Push für einen Pull Request weiterhin einmal `npm test` ohne
+Datei-, Projekt- oder Titel-Filter ausführen. Der erforderliche GitHub-Check
+`browser-tests` führt ebenfalls die vollständige Suite aus.
+
+Die Prüfungen decken Funktionen und horizontalen Überlauf ab; das Aussehen sollte
+bei sichtbaren App-Änderungen zusätzlich visuell geprüft werden. Ein HTML-Bericht
+liegt anschließend unter `playwright-report/index.html`, bei Fehlern inklusive Trace.
 
 In der Codex-Cloud ist Chromium bereits unter `/usr/bin/chromium` installiert. Dort entfällt der Browserdownload:
 

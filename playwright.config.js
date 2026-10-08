@@ -14,7 +14,8 @@ module.exports = defineConfig({
   },
   projects: [
     { name: 'desktop', use: { browserName: 'chromium', viewport: { width: 1280, height: 800 } } },
-    { name: 'mobile', use: { browserName: 'chromium', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } }
+    // Shared logic and explicit viewport matrices run once in desktop.
+    { name: 'mobile', grepInvert: /@once\b/, use: { browserName: 'chromium', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } }
   ],
   webServer: {
     command: 'python3 -m http.server 8765 --bind 127.0.0.1',
