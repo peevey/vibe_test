@@ -25,7 +25,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - „Zurücksetzen“ setzt den Zähler auf null und deaktiviert den Minus-Button.
 - Der Zählerstand bleibt beim Neuladen im selben Browser erhalten. Hauptseite und jede PR-Vorschau speichern getrennte Werte. Nach dem Löschen der Website-Daten startet er wieder bei null.
 - Falls Browserspeicherung gesperrt ist, bleibt der Zähler bedienbar, wird aber nicht dauerhaft gespeichert.
-- Die Hintergrundrakete bewegt sich weiterhin auf ihrer geschlossenen, 17 Sekunden langen Bahn. Der Dinosaurier wurde entfernt.
+- Rakete, UFO und beide Hintergrundplaneten schließen sich bei Mausannäherung einer Reihe entlang der Mausspur an. Fangradius: 100 CSS-Pixel; Abstand: 64 CSS-Pixel, in engen Kurven bei Bedarf größer, damit sich die Objekte nicht dauerhaft überlagern. Schnelles Wegziehen (mindestens 900 CSS-Pixel/s für 80 ms bei wachsendem Abstand zur Spitze) löst die ganze Reihe. Die Objekte kehren in etwa 800 ms weich auf ihre laufenden Bahnen zurück. Maus-Austritt und Fokusverlust lösen ebenfalls die Rückkehr aus. Touch-Eingaben sammeln keine Objekte; bei reduzierter Bewegung ist die Szene statisch. Der Dinosaurier wurde entfernt.
 - Das dauerhafte Weltall-Design zeigt einen dunklen Sternenhimmel mit langsam bewegten Raumschiffen, Planeten und Sternen hinter der dunkelblauen Karte. Der Farbwechsel-Button entfällt. Bei reduzierter Bewegung bleibt auch die Hintergrundszene still.
 
 Alles steckt in `index.html`, einschließlich des Sternenhimmelbildes. Änderungen werden nach dem Neuladen sichtbar.
