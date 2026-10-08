@@ -77,7 +77,7 @@ test('Dauerhaftes Weltall-Design ersetzt den Farbwechsel', async ({ page }) => {
   await expect(page.locator('.space-scene')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.locator('.space-scene')).toHaveCSS('pointer-events', 'none');
   await expect(page.locator('.starfield')).toBeVisible();
-  await expect(page.locator('.space-object')).toHaveCount(6);
+  await expect(page.locator('.space-object')).toHaveCount(5);
   for (const object of await page.locator('.space-object').all()) await expect(object).toBeVisible();
   await page.getByRole('button', { name: '+1 Klick', exact: true }).focus();
   await expect(page.locator('#increment')).toHaveCSS('outline-color', 'rgb(253, 230, 138)');
@@ -86,7 +86,7 @@ test('Dauerhaftes Weltall-Design ersetzt den Farbwechsel', async ({ page }) => {
 test('Weltall bewegt sich auf unterschiedlichen Bahnen und reagiert auf reduzierte Bewegung', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   const motion = await page.locator('.space-scene').evaluate(scene => {
-    const animations = scene.getAnimations({ subtree: true });
+    const animations = scene.getAnimations({ subtree: true }).filter(animation => !animation.effect.target.matches('.chase-flier'));
     const samples = animations.map(animation => {
       animation.pause();
       animation.currentTime = 0;
@@ -98,9 +98,9 @@ test('Weltall bewegt sich auf unterschiedlichen Bahnen und reagiert auf reduzier
     animations.forEach(animation => animation.play());
     return samples;
   });
-  expect(motion).toHaveLength(7);
+  expect(motion).toHaveLength(6);
   expect(motion.every(sample => sample.before !== sample.after)).toBe(true);
-  expect(new Set(motion.map(sample => sample.duration)).size).toBe(7);
+  expect(new Set(motion.map(sample => sample.duration)).size).toBe(6);
   expect(new Set(motion.map(sample => sample.name)).size).toBe(3);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const item of await page.locator('.space-object, .starfield').all()) {
@@ -310,4 +310,62 @@ test('Beide Weltall-Symbole bleiben bei reduzierter Bewegung auf ihren Startsymb
   await page.clock.runFor(60000);
   await expect(page.getByRole('img', { name: 'Erstes Weltall-Symbol' })).toHaveText('🚀');
   await expect(page.getByRole('img', { name: 'Zweites Weltall-Symbol' })).toHaveText('🌍');
+});
+
+test('Eingebetteter Sternenhimmel lädt auch in der Vorschau ohne weitere Ressourcen', async ({ page }) => {
+  const failures = [];
+  const requests = [];
+  page.on('requestfailed', request => failures.push(request.url()));
+  page.on('response', response => { if (!response.ok()) failures.push(response.url()); });
+  page.on('request', request => requests.push(request.url()));
+  const html = await (await page.request.get('/index.html')).text();
+  await page.route('**/previews/pr-48/', route => route.fulfill({ body: html, contentType: 'text/html' }));
+  for (const url of ['/index.html', '/previews/pr-48/']) {
+    await page.goto(url);
+    await expect(page.locator('.chase-dinosaur')).toHaveCount(0);
+    await expect(page.locator('.chase-rocket')).toHaveText('🚀');
+    const image = await page.locator('.starfield').evaluate(async element => {
+      const style = getComputedStyle(element);
+      const source = style.backgroundImage.slice(5, -2);
+      const image = new Image();
+      image.src = source;
+      await image.decode();
+      return { source, width: image.naturalWidth, height: image.naturalHeight,
+        repeat: style.backgroundRepeat, size: style.backgroundSize, color: style.backgroundColor };
+    });
+    expect(image.source).toMatch(/^data:image\/webp;base64,/);
+    expect(image.width).toBeGreaterThanOrEqual(1920);
+    expect(image.height).toBeGreaterThanOrEqual(1920);
+    expect(image.repeat).toBe('no-repeat');
+    expect(image.size).toBe('cover');
+    expect(image.color).toBe('rgb(7, 11, 26)');
+  }
+  expect(failures).toEqual([]);
+  expect(requests.every(url => new URL(url).origin === 'http://127.0.0.1:8765')).toBe(true);
+  expect(requests).toHaveLength(2);
+});
+
+test('Sternenhimmel deckt den Bildschirm nach Resize, Scrollen und an beiden Drift-Enden ab', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }, { width: 320, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    for (const bottom of [false, true]) {
+      await page.evaluate(bottom => scrollTo(0, bottom ? document.body.scrollHeight : 0), bottom);
+      for (const time of [0, 50000]) {
+        const bounds = await page.locator('.starfield').evaluate((element, time) => {
+          const animation = element.getAnimations()[0];
+          animation.pause();
+          animation.currentTime = time;
+          const rect = element.getBoundingClientRect();
+          return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom,
+            overflow: document.documentElement.scrollWidth > innerWidth };
+        }, time);
+        expect(bounds.left).toBeLessThanOrEqual(0);
+        expect(bounds.top).toBeLessThanOrEqual(0);
+        expect(bounds.right).toBeGreaterThanOrEqual(viewport.width);
+        expect(bounds.bottom).toBeGreaterThanOrEqual(viewport.height);
+        expect(bounds.overflow).toBe(false);
+      }
+    }
+  }
 });
