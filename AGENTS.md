@@ -8,9 +8,22 @@ Setze nur den beauftragten Schritt um und halte Änderungen überschaubar.
 
 - Lies das betroffene Issue und kläre gewünschtes Verhalten, Akzeptanzkriterien
   und relevante Grenzfälle. Prüfe dazu den vorhandenen Code.
-- Refinement und Umsetzung sind getrennt: Zustimmung zur Aufgabenbeschreibung
-  ist kein Umsetzungsauftrag. Nach abgestimmtem Refinement aktualisiere das
-  Issue und setze `workflow:ready`.
+- Refine ein Ticket vollständig im Chat, bevor du seinen Text in GitHub
+  aktualisierst. Kläre offene Fragen und zeige den vollständigen vorgeschlagenen
+  Issue-Text einschließlich Titel, Ziel, gewünschtem Verhalten, Akzeptanzkriterien
+  und Abgrenzung. Eine Zusammenfassung oder nur einzelne Textänderungen reichen
+  nicht aus. Zeige nach Änderungen die vollständige überarbeitete Fassung erneut.
+- Warte auf die ausdrückliche Freigabe dieser vollständigen Fassung. Übernimm
+  danach genau den freigegebenen Text nach GitHub und setze erst anschließend
+  `workflow:ready` beziehungsweise den Board-Status Ready. Prüfe gespeicherten
+  Text und Status-Synchronisierung. Ergänze keine unabgestimmten Anforderungen
+  beim Übertragen; inhaltliche Änderungen benötigen eine neue Fassung im Chat
+  und deren Freigabe. Ohne Freigabe bleiben Issue-Text und Ready-Status unverändert.
+- Refinement und Umsetzung sind getrennt. Beginne erst nach einem ausdrücklichen
+  Umsetzungsauftrag; ersetze dann das Ready-Label durch `workflow:in-progress`.
+  Zustimmung zum Refinement ist kein Umsetzungsauftrag. Ist die Umsetzung
+  bereits ausdrücklich beauftragt und die vollständige Fassung freigegeben,
+  benötigst du keine erneute Freigabe für die bereits beauftragte Arbeit.
 - Beginne die Implementierung erst nach einem ausdrücklichen Umsetzungsauftrag.
   Dieser kann auch mehrere konkret benannte Arbeitsschritte autorisieren.
   Ersetze dann `workflow:ready` durch `workflow:in-progress`.
