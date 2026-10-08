@@ -31,11 +31,11 @@ test.beforeEach(async ({ page }) => {
   await freezeOrbits(page);
 });
 
-test('Vier Objekte behalten ihre Bahnen; Dinosaurier und Eingabeziele fehlen', async ({ page }) => {
+test('Acht Objekte behalten ihre Bahnen; Dinosaurier und Eingabeziele fehlen', async ({ page }) => {
   // Use the browser timeline for the CSS motion path; the remaining tests clock JS events.
   await page.clock.resume();
   await page.reload();
-  await expect(page.locator('[data-follow]')).toHaveCount(4);
+  await expect(page.locator('[data-follow]')).toHaveCount(8);
   await expect(page.locator('.chase-dinosaur, .space-scene svg')).toHaveCount(0);
   await expect(page.locator('.space-scene')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.locator('.orbit-carrier').first()).toHaveCSS('pointer-events', 'none');
@@ -177,3 +177,83 @@ test('Enge Kurven behalten auch nach Stillstand sichtbaren Abstand', async ({ pa
   await expect(object(page, 'earth')).toHaveAttribute('data-order', '0');
   await expect(object(page, 'ufo')).toHaveAttribute('data-order', '1');
 });
+
+const additions = { moon: '🌙', comet: '☄️', satellite: '🛰️', alien: '👽' };
+test('Neue Motive lassen sich einzeln aufnehmen; Touch und reduzierte Bewegung bleiben statisch', async ({ page }) => {
+  for (const [name, emoji] of Object.entries(additions)) {
+    await page.reload();
+    await freezeOrbits(page);
+    await expect(object(page, name)).toHaveText(emoji);
+    const point = await center(object(page, name));
+    await move(page, point.x, point.y, 100, 'touch');
+    await expect(object(page, name)).toHaveAttribute('data-motion', 'orbit');
+    await capture(page, name);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(object(page, name)).toHaveAttribute('data-motion', 'orbit');
+    const resting = await center(object(page, name));
+    await move(page, resting.x, resting.y);
+    await page.clock.runFor(1000);
+    expect(await center(object(page, name))).toEqual(resting);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+  }
+});
+
+test('Alle acht Objekte folgen mit stabiler Reihenfolge, werden freigegeben und erneut aufgenommen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  // Controlled home positions isolate capacity from decorative placement.
+  await page.evaluate(() => document.querySelectorAll('[data-follow]').forEach((el, i) => {
+    el.style.cssText = `position: fixed; left: ${80 + i * 150}px; top: 200px; animation: none; offset-path: none;`;
+  }));
+  const names = await page.locator('[data-follow]').evaluateAll(els => els.map(el => el.dataset.follow));
+  for (const name of names) {
+    const point = await center(object(page, name));
+    await move(page, point.x, point.y, 1000);
+    await expect(object(page, name)).toHaveAttribute('data-motion', 'following');
+  }
+  await page.clock.runFor(1000);
+  for (let i = 0; i < names.length; i++) {
+    await expect(object(page, names[i])).toHaveAttribute('data-order', String(i));
+    if (i) {
+      const a = await center(object(page, names[i - 1])), b = await center(object(page, names[i]));
+      expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThanOrEqual(63.9);
+    }
+  }
+  for (let x = 1150; x >= 980; x -= 20) await move(page, x, 200, 100);
+  await page.clock.runFor(1000);
+  for (let x = 960; x >= 800; x -= 20) await move(page, x, 200, 16);
+  for (const name of names) await expect(object(page, name)).toHaveAttribute('data-motion', 'returning');
+  await page.clock.runFor(850);
+  for (const name of names) await expect(object(page, name)).toHaveAttribute('data-motion', 'orbit');
+  for (const name of names) {
+    const point = await center(object(page, name));
+    await move(page, point.x, point.y, 1000);
+    await expect(object(page, name)).toHaveAttribute('data-motion', 'following');
+  }
+});
+
+for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }, { width: 320, height: 844 }]) {
+  test(`Neue Motive sind außerhalb der Karte sichtbar bei ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.clock.resume();
+    await page.reload();
+    for (const name of Object.keys(additions)) {
+      const visible = await object(page, name).evaluate(async el => {
+        const animation = el.getAnimations()[0];
+        animation.pause();
+        await animation.ready;
+        const duration = animation.effect.getTiming().duration;
+        let outside = false;
+        for (let step = 0; step <= 40; step++) {
+          animation.currentTime = step * duration / 20;
+          await new Promise(resolve => requestAnimationFrame(resolve));
+          const r = el.getBoundingClientRect(), c = document.querySelector('main').getBoundingClientRect();
+          if (r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight &&
+            (r.right <= c.left || r.left >= c.right || r.bottom <= c.top || r.top >= c.bottom)) outside = true;
+        }
+        return outside;
+      });
+      expect(visible, name).toBe(true);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
