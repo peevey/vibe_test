@@ -2,6 +2,30 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => { await page.goto('/index.html'); });
 
+test('Hauptüberschrift steht mittig in der Karte, auch bei Zeilenumbruch', async ({ page }) => {
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    const heading = page.getByRole('heading', { level: 1 });
+    await expect(heading).toHaveText('Hier wird experimentiert!');
+    await expect(heading).toHaveCSS('text-align', 'center');
+    const layout = await heading.evaluate(element => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const card = element.closest('main').getBoundingClientRect();
+      return {
+        center: card.x + card.width / 2,
+        lines: Array.from(range.getClientRects(), rect => ({ x: rect.x, width: rect.width })),
+        overflow: document.documentElement.scrollWidth > innerWidth
+      };
+    });
+    expect(layout.overflow).toBe(false);
+    for (const line of layout.lines) {
+      expect(Math.abs(line.x + line.width / 2 - layout.center)).toBeLessThan(1);
+    }
+    if (width === 320) expect(layout.lines.length).toBeGreaterThan(1);
+  }
+});
+
 test('Weltall-Symbol steht über der Überschrift und dreht sich nicht', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   const smiley = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
