@@ -57,7 +57,7 @@ test('Acht Objekte behalten ihre Bahnen; Dinosaurier und Eingabeziele fehlen', a
   await expect(page.locator('#counter')).toHaveText('1');
 });
 
-test('Fangradius, stabile Reihe, langsame Richtungswechsel und Stillstand', async ({ page }) => {
+test('Fangradius, stabile Reihe, langsame Richtungswechsel und Stillstand', { tag: '@once' }, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await freezeOrbits(page);
   const earth = object(page, 'earth');
@@ -84,7 +84,7 @@ test('Fangradius, stabile Reihe, langsame Richtungswechsel und Stillstand', asyn
   expect(await page.locator('.space-object:not([data-follow])').evaluateAll(els => els.every(el => !el.hasAttribute('data-motion')))).toBe(true);
 });
 
-test('Ein Sprung und schnelle Annäherung lösen nicht; schnelles Wegziehen löst die ganze Reihe', async ({ page }) => {
+test('Ein Sprung und schnelle Annäherung lösen nicht; schnelles Wegziehen löst die ganze Reihe', { tag: '@once' }, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await freezeOrbits(page);
   await capture(page, 'earth');
@@ -165,7 +165,7 @@ test('Touch sammelt nichts; Maus funktioniert bei Smartphone-Breite ohne Überla
   await expect(page.locator('#greeting')).toHaveText('Hallo, Ada! Schön, dass du da bist.');
 });
 
-test('Enge Kurven behalten auch nach Stillstand sichtbaren Abstand', async ({ page }) => {
+test('Enge Kurven behalten auch nach Stillstand sichtbaren Abstand', { tag: '@once' }, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await capture(page, 'earth');
   await capture(page, 'ufo');
@@ -198,7 +198,7 @@ test('Neue Motive lassen sich einzeln aufnehmen; Touch und reduzierte Bewegung b
   }
 });
 
-test('Alle acht Objekte folgen mit stabiler Reihenfolge, werden freigegeben und erneut aufgenommen', async ({ page }) => {
+test('Alle acht Objekte folgen mit stabiler Reihenfolge, werden freigegeben und erneut aufgenommen', { tag: '@once' }, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   // Controlled home positions isolate capacity from decorative placement.
   await page.evaluate(() => document.querySelectorAll('[data-follow]').forEach((el, i) => {
@@ -232,7 +232,7 @@ test('Alle acht Objekte folgen mit stabiler Reihenfolge, werden freigegeben und 
 });
 
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }, { width: 320, height: 844 }]) {
-  test(`Neue Motive sind außerhalb der Karte sichtbar bei ${viewport.width}px`, async ({ page }) => {
+  test(`Neue Motive sind außerhalb der Karte sichtbar bei ${viewport.width}px`, { tag: '@once' }, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.clock.resume();
     await page.reload();

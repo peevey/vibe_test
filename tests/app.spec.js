@@ -22,14 +22,14 @@ test('Weltall-Symbol bleibt bei reduzierter Bewegung still', async ({ page }) =>
   await expect(smiley).toHaveCSS('transform', 'none');
 });
 
-test('Begrüßung berücksichtigt Namen und leere Eingaben', async ({ page }) => {
+test('Begrüßung berücksichtigt Namen und leere Eingaben', { tag: '@once' }, async ({ page }) => {
   await page.getByLabel('Wie heißt du?').fill(' Ada ');
   await expect(page.locator('#greeting')).toHaveText('Hallo, Ada! Schön, dass du da bist.');
   await page.getByLabel('Wie heißt du?').fill(' ');
   await expect(page.locator('#greeting')).toHaveText('Hallo! Schön, dass du da bist.');
 });
 
-test('Zähler bleibt mindestens null und synchronisiert den Minus-Button', async ({ page }) => {
+test('Zähler bleibt mindestens null und synchronisiert den Minus-Button', { tag: '@once' }, async ({ page }) => {
   const minus = page.getByRole('button', { name: '−1 Klick', exact: true });
   const plus = page.getByRole('button', { name: '+1 Klick', exact: true });
   await expect(page.locator('#counter')).toHaveText('0');
@@ -55,7 +55,7 @@ test('Zähler bleibt mindestens null und synchronisiert den Minus-Button', async
   await expect(minus).toBeDisabled();
 });
 
-test('Neue Botschaften wiederholen sich nicht direkt', async ({ page }) => {
+test('Neue Botschaften wiederholen sich nicht direkt', { tag: '@once' }, async ({ page }) => {
   await page.getByLabel('Wie heißt du?').fill('Ada');
   for (let i = 0; i < 8; i++) {
     const previous = await page.locator('#greeting').textContent();
@@ -118,7 +118,7 @@ test('Layout passt ohne horizontalen Überlauf und Buttons sind per Tastatur bed
   await expect(page.locator('#counter')).toHaveText('1');
 });
 
-test('Zählerstand und Minus-Button bleiben nach Neuladen erhalten', async ({ page }) => {
+test('Zählerstand und Minus-Button bleiben nach Neuladen erhalten', { tag: '@once' }, async ({ page }) => {
   const plus = page.getByRole('button', { name: '+1 Klick', exact: true });
   const minus = page.getByRole('button', { name: '−1 Klick', exact: true });
   await plus.click();
@@ -135,7 +135,7 @@ test('Zählerstand und Minus-Button bleiben nach Neuladen erhalten', async ({ pa
   await expect(minus).toBeDisabled();
 });
 
-test('Ungültige gespeicherte Zählerstände starten bei null', async ({ page }) => {
+test('Ungültige gespeicherte Zählerstände starten bei null', { tag: '@once' }, async ({ page }) => {
   for (const value of ['abc', '-1', '1.5', '', 'Infinity', '9007199254740992']) {
     await page.evaluate(value => localStorage.setItem('vibe-counter:/', value), value);
     await page.reload();
@@ -144,7 +144,7 @@ test('Ungültige gespeicherte Zählerstände starten bei null', async ({ page })
   }
 });
 
-test('Zähler funktioniert auch bei gesperrter Browserspeicherung', async ({ page }) => {
+test('Zähler funktioniert auch bei gesperrter Browserspeicherung', { tag: '@once' }, async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', { get() { throw new Error('Storage blocked'); } });
   });
@@ -159,7 +159,7 @@ test('Zähler funktioniert auch bei gesperrter Browserspeicherung', async ({ pag
   expect(errors).toEqual([]);
 });
 
-test('Hauptseite und PR-Vorschau speichern getrennte Zählerstände', async ({ page }) => {
+test('Hauptseite und PR-Vorschau speichern getrennte Zählerstände', { tag: '@once' }, async ({ page }) => {
   await page.getByRole('button', { name: '+1 Klick', exact: true }).click();
   await page.route('**/previews/pr-10/', async route => {
     const response = await page.request.get('/index.html');
@@ -175,7 +175,7 @@ test('Hauptseite und PR-Vorschau speichern getrennte Zählerstände', async ({ p
   await expect(page.locator('#counter')).toHaveText('1');
 });
 
-test('Weltall-Symbol wechselt genau nach drei Sekunden durch alle fünf Symbole', async ({ page }) => {
+test('Weltall-Symbol wechselt genau nach drei Sekunden durch alle fünf Symbole', { tag: '@once' }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
@@ -192,7 +192,7 @@ test('Weltall-Symbol wechselt genau nach drei Sekunden durch alle fünf Symbole'
   }
 });
 
-test('Reduzierte Bewegung verhindert auch den automatischen Weltall-Symbol-Wechsel', async ({ page }) => {
+test('Reduzierte Bewegung verhindert auch den automatischen Weltall-Symbol-Wechsel', { tag: '@once' }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
@@ -203,7 +203,7 @@ test('Reduzierte Bewegung verhindert auch den automatischen Weltall-Symbol-Wechs
   await expect(smiley).toHaveCSS('animation-name', 'none');
 });
 
-test('Weltall-Symbol reagiert auf Änderungen der Bewegungseinstellung', async ({ page }) => {
+test('Weltall-Symbol reagiert auf Änderungen der Bewegungseinstellung', { tag: '@once' }, async ({ page }) => {
   async function changeMotionPreference(reducedMotion) {
     // CSS und das JavaScript-change-Ereignis werden nicht zwingend gleichzeitig aktualisiert.
     await page.evaluate(() => {
@@ -277,7 +277,7 @@ test('Zweites Weltall-Symbol steht gleich groß rechts daneben, auch bei schmale
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('Beide Weltall-Symbole wechseln im vollständigen Zyklus um 1,5 Sekunden versetzt', async ({ page }) => {
+test('Beide Weltall-Symbole wechseln im vollständigen Zyklus um 1,5 Sekunden versetzt', { tag: '@once' }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
@@ -302,7 +302,7 @@ test('Beide Weltall-Symbole wechseln im vollständigen Zyklus um 1,5 Sekunden ve
   }
 });
 
-test('Beide Weltall-Symbole bleiben bei reduzierter Bewegung auf ihren Startsymbolen', async ({ page }) => {
+test('Beide Weltall-Symbole bleiben bei reduzierter Bewegung auf ihren Startsymbolen', { tag: '@once' }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
@@ -345,7 +345,7 @@ test('Eingebetteter Sternenhimmel lädt auch in der Vorschau ohne weitere Ressou
   expect(requests).toHaveLength(2);
 });
 
-test('Sternenhimmel deckt den Bildschirm nach Resize, Scrollen und an beiden Drift-Enden ab', async ({ page }) => {
+test('Sternenhimmel deckt den Bildschirm nach Resize, Scrollen und an beiden Drift-Enden ab', { tag: '@once' }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }, { width: 320, height: 844 }]) {
     await page.setViewportSize(viewport);
