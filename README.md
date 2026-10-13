@@ -15,8 +15,8 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 - Die Hauptüberschrift verwendet eine verspielte lokale Schrift mit einem Verlauf von Hellviolett zu Rosa. Die verfügbare Schrift hängt vom Gerät ab; ohne Verlaufstext-Unterstützung bleibt die Schrift hellviolett.
 
-- Zwei 96 Pixel große Weltall-Symbole stehen nebeneinander und drehen sich nicht. Der erste wechselt alle drei Sekunden in der Reihenfolge 🚀 → 🪐 → ⭐ → 🌙 → 🛸 → 🚀. Der zweite wechselt 🌍 → ☄️ → 🌟 → 🌌 → 👽 → 🌍, mit dem ersten Wechsel nach 1,5 Sekunden und danach alle drei Sekunden.
-- Bei reduzierter Bewegung bleiben beide auf ihren Startsymbolen 🚀 und 🌍. Nach Deaktivierung dieser Einstellung startet der versetzte Zeitplan erneut.
+- Drei Weltall-Symbole stehen als zentrierte Gruppe nebeneinander und drehen sich nicht. Sie sind auf Desktop 96 Pixel groß, bis 600 Pixel Bildschirmbreite 64 Pixel; der Abstand beträgt 16 Pixel. Alle wechseln alle drei Sekunden: 🚀 → 🪐 → ⭐ → 🌙 → 🛸 → 🚀 (erster Wechsel nach 3 Sekunden), 🌍 → ☄️ → 🌟 → 🌌 → 👽 → 🌍 (nach 1,5 Sekunden) und 🛰️ → 🌕 → ✨ → 👾 → 🔭 → 🛰️ (nach 0,75 Sekunden).
+- Bei reduzierter Bewegung bleiben alle drei auf ihren Startsymbolen 🚀, 🌍 und 🛰️. Auch beim Aktivieren während der Nutzung werden die Startsymbole angezeigt. Nach Deaktivierung dieser Einstellung startet der versetzte Zeitplan erneut.
 
 - Einen Namen eingeben: Die Begrüßung passt sich an.
 - „Neue Willkommensbotschaft“ wählt zufällig eine andere Begrüßung und berücksichtigt deinen Namen.

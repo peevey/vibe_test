@@ -45,8 +45,8 @@
     @supports (background-clip: text) or (-webkit-background-clip: text) {
       h1 { background-image: linear-gradient(90deg, #c4b5fd, #f9a8d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
     }
-    .smileys { display: flex; gap: 16px; margin-bottom: 20px; }
-    .smiley { display: block; width: fit-content; flex-shrink: 0; font-size: 96px; line-height: 1; }
+    .smileys { display: flex; justify-content: center; gap: 16px; margin-bottom: 20px; }
+    .smiley { display: block; width: 1em; text-align: center; flex-shrink: 0; font-size: 96px; line-height: 1; }
     p { color: #bdcce6; line-height: 1.6; }
     .flower { text-align: center; font-size: 48px; line-height: 1; }
     section { margin-top: 28px; }
@@ -63,6 +63,7 @@
     footer { margin-top: 32px; color: #adc0de; font-size: 13px; }
     @media (max-width: 600px) {
       main { margin-block: 64px; }
+      .smiley { font-size: 64px; }
       .space-object[data-follow="saturn"] { top: 16px; }
       .space-object.new-object { top: 20px; font-size: 28px; }
       @media (prefers-reduced-motion: no-preference) {
@@ -99,6 +100,7 @@
     <div class="smileys">
       <span id="smiley-primary" class="smiley" role="img" aria-label="Erstes Weltall-Symbol">🚀</span>
       <span id="smiley-secondary" class="smiley" role="img" aria-label="Zweites Weltall-Symbol">🌍</span>
+      <span id="smiley-tertiary" class="smiley" role="img" aria-label="Drittes Weltall-Symbol">🛰️</span>
     </div>
     <span class="label">HTML · CSS · JavaScript</span>
     <h1>Hier wird experimentiert!</h1>
@@ -140,8 +142,9 @@
     const storageKey = `vibe-counter:${location.pathname.replace(/index\.html$/, '')}`;
     let clicks = readCounter();
     const smileyCycles = [
-      { element: document.querySelector('#smiley-primary'), faces: ['🚀', '🪐', '⭐', '🌙', '🛸'], index: 0 },
-      { element: document.querySelector('#smiley-secondary'), faces: ['🌍', '☄️', '🌟', '🌌', '👽'], index: 0 },
+      { element: document.querySelector('#smiley-primary'), faces: ['🚀', '🪐', '⭐', '🌙', '🛸'], delay: 3000, index: 0 },
+      { element: document.querySelector('#smiley-secondary'), faces: ['🌍', '☄️', '🌟', '🌌', '👽'], delay: 1500, index: 0 },
+      { element: document.querySelector('#smiley-tertiary'), faces: ['🛰️', '🌕', '✨', '👾', '🔭'], delay: 750, index: 0 },
     ];
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     // A translating carrier moves each original CSS orbit in viewport coordinates.
@@ -308,7 +311,7 @@
     });
 
     let smileyTimers = [];
-    let offsetTimer;
+    let smileyOffsetTimers = [];
 
     function advanceSmiley(cycle) {
       cycle.index = (cycle.index + 1) % cycle.faces.length;
@@ -318,17 +321,19 @@
     function configureSmileyCycle() {
       smileyTimers.forEach(clearInterval);
       smileyTimers = [];
-      clearTimeout(offsetTimer);
+      smileyOffsetTimers.forEach(clearTimeout);
+      smileyOffsetTimers = [];
       smileyCycles.forEach(cycle => {
         cycle.index = 0;
         cycle.element.textContent = cycle.faces[0];
       });
       if (reducedMotion.matches) return;
-      smileyTimers.push(setInterval(() => advanceSmiley(smileyCycles[0]), 3000));
-      offsetTimer = setTimeout(() => {
-        advanceSmiley(smileyCycles[1]);
-        smileyTimers.push(setInterval(() => advanceSmiley(smileyCycles[1]), 3000));
-      }, 1500);
+      smileyCycles.forEach(cycle => {
+        smileyOffsetTimers.push(setTimeout(() => {
+          advanceSmiley(cycle);
+          smileyTimers.push(setInterval(() => advanceSmiley(cycle), 3000));
+        }, cycle.delay));
+      });
     }
     reducedMotion.addEventListener('change', configureSmileyCycle);
     configureSmileyCycle();

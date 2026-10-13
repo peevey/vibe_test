@@ -30,7 +30,7 @@ test('Weltall-Symbol steht über der Überschrift und dreht sich nicht', async (
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   const smiley = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
   await expect(smiley).toBeVisible();
-  await expect(smiley).toHaveCSS('font-size', '96px');
+  await expect(smiley).toHaveCSS('font-size', page.viewportSize().width <= 600 ? '64px' : '96px');
   const smileyBox = await smiley.boundingBox();
   const headingBox = await page.getByRole('heading', { level: 1 }).boundingBox();
   expect(smileyBox.y + smileyBox.height).toBeLessThan(headingBox.y);
@@ -288,18 +288,34 @@ test('Überschrift hat ohne Verlaufstext-Unterstützung eine sichtbare violette 
   await expect(heading).toHaveCSS('background-image', 'none');
 });
 
-test('Zweites Weltall-Symbol steht gleich groß rechts daneben, auch bei schmaler Smartphone-Breite', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 800 });
-  const first = page.getByRole('img', { name: 'Erstes Weltall-Symbol' });
-  const second = page.getByRole('img', { name: 'Zweites Weltall-Symbol' });
-  await expect(second).toBeVisible();
-  await expect(second).toHaveCSS('font-size', '96px');
-  await expect(second).toHaveCSS('animation-name', 'none');
-  const a = await first.boundingBox(), b = await second.boundingBox();
-  expect(b.x).toBeGreaterThanOrEqual(a.x + a.width);
-  expect(b.y).toBe(a.y);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-});
+for (const width of [1280, 600, 601, 390, 320]) {
+  test(`Drei Weltall-Symbole sind bei ${width}px zentriert und vollständig sichtbar`, { tag: '@once' }, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const symbols = page.locator('.smileys [role="img"]');
+    await expect(symbols).toHaveCount(3);
+    const boxes = [];
+    for (const symbol of await symbols.all()) {
+      await expect(symbol).toBeVisible();
+      await expect(symbol).toHaveCSS('font-size', width <= 600 ? '64px' : '96px');
+      await expect(symbol).toHaveCSS('animation-name', 'none');
+      await expect(symbol).toHaveCSS('transform', 'none');
+      boxes.push(await symbol.boundingBox());
+    }
+    const card = await page.locator('main').boundingBox();
+    const heading = await page.getByRole('heading', { level: 1 }).boundingBox();
+    expect(Math.abs((boxes[0].x + boxes[2].x + boxes[2].width) / 2 - (card.x + card.width / 2))).toBeLessThan(1);
+    for (let i = 0; i < boxes.length; i++) {
+      expect(boxes[i].x).toBeGreaterThanOrEqual(card.x);
+      expect(boxes[i].x + boxes[i].width).toBeLessThanOrEqual(card.x + card.width);
+      expect(boxes[i].y + boxes[i].height).toBeLessThan(heading.y);
+      if (i) {
+        expect(boxes[i].y).toBe(boxes[0].y);
+        expect(boxes[i].x - boxes[i - 1].x - boxes[i - 1].width).toBeCloseTo(16, 1);
+      }
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
 
 test('Beide Weltall-Symbole wechseln im vollständigen Zyklus um 1,5 Sekunden versetzt', { tag: '@once' }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -326,14 +342,16 @@ test('Beide Weltall-Symbole wechseln im vollständigen Zyklus um 1,5 Sekunden ve
   }
 });
 
-test('Beide Weltall-Symbole bleiben bei reduzierter Bewegung auf ihren Startsymbolen', { tag: '@once' }, async ({ page }) => {
+test('Alle drei Weltall-Symbole bleiben bei reduzierter Bewegung auf ihren Startsymbolen', { tag: '@once' }, async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
   await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
   await page.reload();
+  await expect(page.getByRole('img', { name: 'Drittes Weltall-Symbol' })).toHaveText('🛰️');
   await page.clock.runFor(60000);
   await expect(page.getByRole('img', { name: 'Erstes Weltall-Symbol' })).toHaveText('🚀');
   await expect(page.getByRole('img', { name: 'Zweites Weltall-Symbol' })).toHaveText('🌍');
+  await expect(page.getByRole('img', { name: 'Drittes Weltall-Symbol' })).toHaveText('🛰️');
 });
 
 test('Eingebetteter Sternenhimmel lädt auch in der Vorschau ohne weitere Ressourcen', async ({ page }) => {
@@ -391,5 +409,66 @@ test('Sternenhimmel deckt den Bildschirm nach Resize, Scrollen und an beiden Dri
         expect(bounds.overflow).toBe(false);
       }
     }
+  }
+});
+
+test('Drei Weltall-Symbole wechseln an ihren versetzten Grenzen durch vollständige Zyklen', { tag: '@once' }, async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
+  await page.reload();
+  const symbols = page.locator('.smileys [role="img"]');
+  const cycles = [
+    ['🚀', '🪐', '⭐', '🌙', '🛸'],
+    ['🌍', '☄️', '🌟', '🌌', '👽'],
+    ['🛰️', '🌕', '✨', '👾', '🔭'],
+  ];
+  const expected = time => cycles.map((faces, i) => {
+    const delay = [3000, 1500, 750][i];
+    return faces[(time < delay ? 0 : 1 + Math.floor((time - delay) / 3000)) % faces.length];
+  });
+  await expect(symbols).toHaveText(expected(0));
+  for (let time = 750; time <= 15000; time += 750) {
+    await page.clock.runFor(749);
+    await expect(symbols).toHaveText(expected(time - 1));
+    await page.clock.runFor(1);
+    await expect(symbols).toHaveText(expected(time));
+  }
+});
+
+test('Wiederholtes Umschalten beendet ausstehende und laufende Emoji-Zeitgeber', { tag: '@once' }, async ({ page }) => {
+  async function changeMotionPreference(reducedMotion) {
+    await page.evaluate(() => {
+      window.motionPreferenceChanged = new Promise(resolve => {
+        matchMedia('(prefers-reduced-motion: reduce)')
+          .addEventListener('change', () => resolve(true), { once: true });
+      });
+    });
+    await page.emulateMedia({ reducedMotion });
+    await page.evaluate(() => window.motionPreferenceChanged);
+  }
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.clock.install({ time: new Date('2030-01-01T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2030-01-01T00:00:01Z'));
+  await page.reload();
+  const symbols = page.locator('.smileys [role="img"]');
+  for (const elapsed of [500, 1000, 2000, 4500]) {
+    await page.clock.runFor(elapsed);
+    await changeMotionPreference('reduce');
+    await expect(symbols).toHaveText(['🚀', '🌍', '🛰️']);
+    await page.clock.runFor(30000);
+    await expect(symbols).toHaveText(['🚀', '🌍', '🛰️']);
+    await changeMotionPreference('no-preference');
+    await expect(symbols).toHaveText(['🚀', '🌍', '🛰️']);
+    await page.clock.runFor(749);
+    await expect(symbols).toHaveText(['🚀', '🌍', '🛰️']);
+    await page.clock.runFor(1);
+    await expect(symbols).toHaveText(['🚀', '🌍', '🌕']);
+    await page.clock.runFor(750);
+    await expect(symbols).toHaveText(['🚀', '☄️', '🌕']);
+    await page.clock.runFor(1500);
+    await expect(symbols).toHaveText(['🪐', '☄️', '🌕']);
+    await page.clock.runFor(750);
+    await expect(symbols).toHaveText(['🪐', '☄️', '✨']);
   }
 });
